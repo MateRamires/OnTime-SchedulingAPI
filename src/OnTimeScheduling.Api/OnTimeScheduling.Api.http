@@ -1,0 +1,6 @@
+@OnTimeScheduling.Api_HostAddress = http://localhost:5207
+
+GET {{OnTimeScheduling.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
