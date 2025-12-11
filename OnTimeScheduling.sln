@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnTimeScheduling.Applicatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnTimeScheduling.Infrastructure", "src\OnTimeScheduling.Infrastructure\OnTimeScheduling.Infrastructure.csproj", "{F7414B19-17C7-4FA6-AB7A-E8F0D2528E69}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2D74C446-0CA3-44DA-A622-8C3A2428512C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A12657FD-72AC-44F1-8EFA-03CD9F7A1490} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{5C48C1E5-9FC2-4C95-AD9F-55699A757436} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F7414B19-17C7-4FA6-AB7A-E8F0D2528E69} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35E84981-2131-401C-BCE2-771E24CD02FB}
