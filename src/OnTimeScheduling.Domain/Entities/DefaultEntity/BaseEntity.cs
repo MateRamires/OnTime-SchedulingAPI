@@ -1,6 +1,6 @@
 ﻿namespace OnTimeScheduling.Domain.Entities.DefaultEntity;
 
-public class Entity
+public class BaseEntity
 {
     public Guid Id { get; protected set; } = Guid.NewGuid();
 
