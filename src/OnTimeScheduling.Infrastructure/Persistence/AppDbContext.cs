@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.User;
 
-namespace OnTimeScheduling.Infrastructure.Persistance;
+namespace OnTimeScheduling.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {

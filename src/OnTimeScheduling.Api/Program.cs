@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OnTimeScheduling.Infrastructure.Persistance;
+using OnTimeScheduling.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
