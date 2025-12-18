@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OnTimeScheduling.Application\OnTimeScheduling.Application.csproj" />
     <ProjectReference Include="..\OnTimeScheduling.Domain\OnTimeScheduling.Domain.csproj" />
   </ItemGroup>
 

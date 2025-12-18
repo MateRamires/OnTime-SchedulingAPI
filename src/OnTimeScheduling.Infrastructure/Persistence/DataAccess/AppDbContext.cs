@@ -1,13 +1,14 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.User;
 using System.Threading;
 
-namespace OnTimeScheduling.Infrastructure.Persistence;
+namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IUnitOfWork
 {
     public DbSet<User> Users => Set<User>();
 
@@ -30,4 +31,6 @@ public class AppDbContext : DbContext
 
         return base.SaveChangesAsync(cancellationToken);
     }
+    public Task<int> CommitAsync(CancellationToken ct = default)
+       => SaveChangesAsync(ct);
 }
