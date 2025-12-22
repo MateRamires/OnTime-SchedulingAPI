@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.User;
-using System.Threading;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 

@@ -11,11 +11,17 @@ public sealed class UserRepository : IUserRepository
     public UserRepository(AppDbContext db) => _db = db;
 
     public async Task AddAsync(User user, CancellationToken ct = default)
-        => await _db.Users.AddAsync(user, ct);
+    {
+        await _db.Users.AddAsync(user, ct);
+    }
 
-    public Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);
+    public async Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);
+    }
 
     public void Update(User user)
-        => _db.Users.Update(user);
+    {
+        _db.Users.Update(user);
+    }
 }
