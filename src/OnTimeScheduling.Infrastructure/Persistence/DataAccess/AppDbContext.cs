@@ -7,7 +7,7 @@ using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 
-public class AppDbContext : DbContext, IUnitOfWork
+public class AppDbContext : DbContext
 {
     public DbSet<User> Users => Set<User>();
 
@@ -19,17 +19,4 @@ public class AppDbContext : DbContext, IUnitOfWork
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
-
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
-        {
-            if (entry.State == EntityState.Modified)
-                entry.Entity.Touch();
-        }
-
-        return base.SaveChangesAsync(cancellationToken);
-    }
-    public Task<int> CommitAsync(CancellationToken ct = default)
-       => SaveChangesAsync(ct);
 }

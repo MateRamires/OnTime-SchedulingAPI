@@ -18,7 +18,7 @@ public static class DependencyInjenctionExtension
 
         services.AddScoped<IUserRepository, UserRepository>();
 
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     }
 }
