@@ -16,11 +16,11 @@ public class CreateUserUseCase : ICreateUserUseCase
 
     public async Task<Guid> ExecuteAsync(User user)
     {
-        /*var newUser = new User();
+        var newUser = new User();
 
         await _userRepository.AddAsync(newUser);
         await _unitOfWork.CommitAsync();
         
-        return newUser.Id;*/
+        return newUser.Id;
     }
 }
