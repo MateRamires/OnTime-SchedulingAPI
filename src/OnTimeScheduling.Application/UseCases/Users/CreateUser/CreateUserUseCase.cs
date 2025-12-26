@@ -14,13 +14,9 @@ public class CreateUserUseCase : ICreateUserUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> ExecuteAsync(User user)
+    public async Task<Guid> ExecuteAsync()
     {
-        var newUser = new User();
-
-        await _userRepository.AddAsync(newUser);
+        await _userRepository.AddAsync();
         await _unitOfWork.CommitAsync();
-        
-        return newUser.Id;
     }
 }
