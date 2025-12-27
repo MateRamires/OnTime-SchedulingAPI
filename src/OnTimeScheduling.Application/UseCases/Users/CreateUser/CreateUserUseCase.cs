@@ -14,7 +14,7 @@ public class CreateUserUseCase : ICreateUserUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request)
+    public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
     {
         await _userRepository.AddAsync();
         await _unitOfWork.CommitAsync();

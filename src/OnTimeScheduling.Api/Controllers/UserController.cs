@@ -11,7 +11,7 @@ namespace OnTimeScheduling.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Register([FromServices] ICreateUserUseCase useCase, [FromBody] RequestRegisterUserJson request, CancellationToken ct) 
         {
-            var result = await useCase.ExecuteAsync(request);
+            var result = await useCase.ExecuteAsync(request, ct);
 
             return Created(string.Empty, result);
         }
