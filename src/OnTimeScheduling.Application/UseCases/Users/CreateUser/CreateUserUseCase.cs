@@ -1,6 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
-using OnTimeScheduling.Domain.Entities.User;
+using OnTimeScheduling.Communication.Requests;
 
 namespace OnTimeScheduling.Application.UseCases.Users.CreateUser;
 
@@ -14,7 +14,7 @@ public class CreateUserUseCase : ICreateUserUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> ExecuteAsync()
+    public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request)
     {
         await _userRepository.AddAsync();
         await _unitOfWork.CommitAsync();

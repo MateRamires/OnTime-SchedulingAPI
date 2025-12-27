@@ -1,8 +1,8 @@
-﻿using OnTimeScheduling.Domain.Entities.User;
+﻿using OnTimeScheduling.Communication.Requests;
 
 namespace OnTimeScheduling.Application.UseCases.Users.CreateUser;
 
 public interface ICreateUserUseCase
 {
-    public Task<Guid> ExecuteAsync();
+    public Task<Guid> ExecuteAsync(RequestRegisterUserJson request);
 }
