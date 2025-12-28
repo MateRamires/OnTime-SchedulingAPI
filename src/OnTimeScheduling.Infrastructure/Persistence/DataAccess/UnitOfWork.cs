@@ -14,7 +14,7 @@ public class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
     }
 
-    public Task<int> CommitAsync(CancellationToken ct = default)
+    public Task<int> Commit(CancellationToken ct = default)
     {
         foreach (var entry in _dbContext.ChangeTracker.Entries<BaseEntity>())
         {

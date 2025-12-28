@@ -10,12 +10,17 @@ public sealed class UserRepository : IUserRepository
 
     public UserRepository(AppDbContext db) => _db = db;
 
-    public async Task AddAsync(User user, CancellationToken ct = default)
+    public async Task Add(User user, CancellationToken ct = default)
     {
         await _db.Users.AddAsync(user, ct);
     }
 
-    public async Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public Task<bool> EmailExists(string email, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<User?> GetById(Guid id, CancellationToken ct = default)
     {
         return await _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
