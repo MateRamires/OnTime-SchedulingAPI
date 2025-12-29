@@ -18,7 +18,10 @@ public class User : BaseEntity
     private User() { }
 
     public User(Guid? companyId, string name, string email, string password, UserRole role) 
-    { 
+    {
+        if (!Enum.IsDefined(typeof(UserRole), role))
+            throw new ArgumentException("Invalid user role.", nameof(role)); //TODO: Understand what this code means
+
         CompanyId = companyId;
         SetName(name);
         SetEmail(email);
@@ -34,7 +37,7 @@ public class User : BaseEntity
     private void SetPassword(string password)
     {
         password = (password ?? "").Trim();
-        if (password.Length < 6) throw new ArgumentException("Invalid Password.");
+        if (password.Length < 6) throw new ArgumentException("Invalid Password."); //TODO: Check what invariants are actually necessary for Domain.Entity
         Password = password;
         Touch();
     }

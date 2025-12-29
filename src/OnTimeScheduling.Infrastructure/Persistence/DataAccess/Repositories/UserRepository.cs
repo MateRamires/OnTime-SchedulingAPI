@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Domain.Entities.User;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
 
@@ -17,7 +18,9 @@ public sealed class UserRepository : IUserRepository
 
     public Task<bool> EmailExists(string email, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        email = email.Trim();
+
+        return _db.Users.AsNoTracking().AnyAsync(u => u.Email == email && u.Status == RecordStatus.Active, ct);
     }
 
     public async Task<User?> GetById(Guid id, CancellationToken ct = default)

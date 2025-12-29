@@ -1,5 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
@@ -19,10 +20,12 @@ public class CreateUserUseCase : ICreateUserUseCase
     public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
     {
 
-        await Validate(request);
+        await Validate(request, ct);
+
+        //TODO: hash on password before creating new user.
 
         var user = new User(
-            companyId: null,
+            companyId: null, //TODO: Config the getting companyId from User's claims.
             name: request.Name,
             email: request.Email,
             password: request.Password,
@@ -31,10 +34,25 @@ public class CreateUserUseCase : ICreateUserUseCase
 
         await _userRepository.Add(user);
         await _unitOfWork.Commit();
+
+        return user.Id;
     }
 
-    private async Task Validate(RequestRegisterUserJson request) 
-    { 
-    
+    private async Task Validate(RequestRegisterUserJson request, CancellationToken ct = default) 
+    {
+        var validator = new RegisterUserValidator();
+
+        var result = validator.Validate(request);
+
+        var emailExists = await _userRepository.EmailExists(request.Email, ct);
+        if (emailExists)
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "This Email is Already Registered!"));
+
+        if (!result.IsValid) 
+        { 
+            var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
+
+            //TODO: create custom Throw new Error...
+        }
     }
 }
