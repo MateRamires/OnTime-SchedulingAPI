@@ -46,7 +46,7 @@ public class CreateUserUseCase : ICreateUserUseCase
 
         var emailExists = await _userRepository.EmailExists(request.Email, ct);
         if (emailExists)
-            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "This Email is Already Registered!"));
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The Email is Already Registered!"));
 
         if (!result.IsValid) 
         { 

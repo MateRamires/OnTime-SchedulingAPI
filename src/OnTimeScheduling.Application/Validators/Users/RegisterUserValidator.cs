@@ -6,7 +6,7 @@ namespace OnTimeScheduling.Application.Validators.Users;
 
 public class RegisterUserValidator : AbstractValidator<RequestRegisterUserJson>
 {
-    public RegisterUserValidator()
+    public RegisterUserValidator() //TODO: Create variables/resources for the exception messages.
     {
         RuleFor(user => user.Name).NotEmpty().WithMessage("Name Cannot be Empty!");
         RuleFor(user => user.Email).NotEmpty().WithMessage("Email Cannot be Empty!");

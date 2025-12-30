@@ -39,7 +39,7 @@ public class User : BaseEntity
         password = (password ?? "").Trim();
         if (password.Length < 6) throw new ArgumentException("Invalid Password."); //TODO: Check what invariants are actually necessary for Domain.Entity
         Password = password;
-        Touch();
+
     }
 
     private void SetEmail(string email)
@@ -47,7 +47,7 @@ public class User : BaseEntity
         email = (email ?? "").Trim();
         if (email.Length < 5 || !email.Contains('@')) throw new ArgumentException("Invalid Email.");
         Email = email;
-        Touch();
+
     }
 
     private void SetName(string name)
@@ -55,18 +55,18 @@ public class User : BaseEntity
         name = (name ?? "").Trim();
         if (name.Length < 2) throw new ArgumentException("Invalid Name.");
         Name = name;
-        Touch();
+
     }
 
     public void Inactivate() 
     {
         Status = RecordStatus.Inactive;
-        Touch();
+
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
-        Touch();
+
     }
 }
