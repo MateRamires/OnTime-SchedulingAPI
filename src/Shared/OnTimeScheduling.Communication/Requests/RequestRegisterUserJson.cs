@@ -6,8 +6,8 @@ public class RequestRegisterUserJson
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = 0;
 
-    //TODO: Add a List of Locations (Company Locations where the User works on
+    //TODO: Add a List of Locations (Company Locations where the User works on)
 }

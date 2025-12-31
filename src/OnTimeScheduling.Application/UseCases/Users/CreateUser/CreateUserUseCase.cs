@@ -1,5 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security;
 using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Domain.Entities.User;
@@ -11,10 +12,12 @@ public class CreateUserUseCase : ICreateUserUseCase
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork)
+    private readonly IPasswordHashService _passwordHashService;
+    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _passwordHashService = passwordHashService;
     }
 
     public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
@@ -28,7 +31,7 @@ public class CreateUserUseCase : ICreateUserUseCase
             companyId: null, //TODO: Config the getting companyId from User's claims.
             name: request.Name,
             email: request.Email,
-            password: request.Password,
+            passwordHash: request.PasswordHash,
             role: (UserRole) (int) request.Role
         );
 

@@ -10,14 +10,14 @@ public class User : BaseEntity
 
     public string Name { get; private set; } = null;
     public string Email { get; private set; } = null;
-    public string Password { get; private set; } = null;
+    public string PasswordHash { get; private set; } = null;
 
     public UserRole Role { get; private set; }
     public RecordStatus Status { get; private set; }
 
     private User() { }
 
-    public User(Guid? companyId, string name, string email, string password, UserRole role) 
+    public User(Guid? companyId, string name, string email, string passwordHash, UserRole role) 
     {
         if (!Enum.IsDefined(typeof(UserRole), role))
             throw new ArgumentException("Invalid user role.", nameof(role)); //TODO: Understand what this code means
@@ -25,7 +25,7 @@ public class User : BaseEntity
         CompanyId = companyId;
         SetName(name);
         SetEmail(email);
-        SetPassword(password);
+        SetPasswordHash(passwordHash);
         Role = role;
         Status = RecordStatus.Active;
 
@@ -34,11 +34,12 @@ public class User : BaseEntity
         
     }
 
-    private void SetPassword(string password)
+    private void SetPasswordHash(string passwordHash)
     {
-        password = (password ?? "").Trim();
-        if (password.Length < 6) throw new ArgumentException("Invalid Password."); //TODO: Check what invariants are actually necessary for Domain.Entity
-        Password = password;
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new InvalidOperationException("Password is required.");  //TODO: Check what invariants are actually necessary for Domain.Entity
+
+        PasswordHash = passwordHash;
 
     }
 

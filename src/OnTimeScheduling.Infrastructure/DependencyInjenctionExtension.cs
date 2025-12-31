@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
+using OnTimeScheduling.Infrastructure.Security;
 
 namespace OnTimeScheduling.Infrastructure;
 
@@ -19,6 +21,9 @@ public static class DependencyInjenctionExtension
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IPasswordHashService, PasswordHashService>();
+
 
     }
 }

@@ -28,7 +28,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(x => x.Email).IsUnique();
 
-        builder.Property(x => x.Password)
+        builder.Property(x => x.PasswordHash)
             .HasColumnName("password_hash")
             .HasMaxLength(200)
             .IsRequired();
