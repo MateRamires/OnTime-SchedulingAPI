@@ -10,7 +10,7 @@ public class RegisterUserValidator : AbstractValidator<RequestRegisterUserJson>
     {
         RuleFor(user => user.Name).NotEmpty().WithMessage("Name Cannot be Empty!");
         RuleFor(user => user.Email).NotEmpty().WithMessage("Email Cannot be Empty!");
-        RuleFor(user => user.PasswordHash).SetValidator(new PasswordValidator<RequestRegisterUserJson>());
+        RuleFor(user => user.Password).SetValidator(new PasswordValidator<RequestRegisterUserJson>());
         RuleFor(user => user.Role).IsInEnum().WithMessage("Role is Invalid!");
         When(user => !string.IsNullOrEmpty(user.Email), () =>
         {
