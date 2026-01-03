@@ -5,7 +5,6 @@ namespace OnTimeScheduling.Domain.Entities.User;
 
 public class User : BaseEntity
 {
-    //Nullable because SUPER_ADMIN doesn't have a company.
     public Guid? CompanyId { get; private set; }
 
     public string Name { get; private set; } = null;
@@ -20,7 +19,13 @@ public class User : BaseEntity
     public User(Guid? companyId, string name, string email, string passwordHash, UserRole role) 
     {
         if (!Enum.IsDefined(typeof(UserRole), role))
-            throw new ArgumentException("Invalid user role.", nameof(role)); //TODO: Understand what this code means
+            throw new ArgumentException("Invalid user role.", nameof(role));
+
+        if (role == UserRole.SUPER_ADMIN && companyId is not null)
+            throw new InvalidOperationException("Super_Admin users must not have a companyId.");
+
+        if (role != UserRole.SUPER_ADMIN && CompanyId is null)
+            throw new InvalidOperationException("Non-Super_Admin users must have a companyId.");
 
         CompanyId = companyId;
         SetName(name);
@@ -28,16 +33,12 @@ public class User : BaseEntity
         SetPasswordHash(passwordHash);
         Role = role;
         Status = RecordStatus.Active;
-
-        if (Role != UserRole.SUPER_ADMIN && CompanyId is null)
-            throw new InvalidOperationException("Non-Super_Admin users must have a companyId.");
-        
     }
 
     private void SetPasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new InvalidOperationException("Password is required.");  //TODO: Check what invariants are actually necessary for Domain.Entity
+            throw new InvalidOperationException("Password is required.");  
 
         PasswordHash = passwordHash;
 
@@ -45,16 +46,18 @@ public class User : BaseEntity
 
     private void SetEmail(string email)
     {
-        email = (email ?? "").Trim();
-        if (email.Length < 5 || !email.Contains('@')) throw new ArgumentException("Invalid Email.");
+        if (string.IsNullOrWhiteSpace(email))
+            throw new InvalidOperationException("Email is required.");
+
         Email = email;
 
     }
 
     private void SetName(string name)
     {
-        name = (name ?? "").Trim();
-        if (name.Length < 2) throw new ArgumentException("Invalid Name.");
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidOperationException("Name is required.");
+
         Name = name;
 
     }
@@ -62,12 +65,10 @@ public class User : BaseEntity
     public void Inactivate() 
     {
         Status = RecordStatus.Inactive;
-
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
-
     }
 }
