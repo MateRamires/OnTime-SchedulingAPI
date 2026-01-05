@@ -5,6 +5,7 @@ using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Users.CreateUser;
 
@@ -55,7 +56,7 @@ public class CreateUserUseCase : ICreateUserUseCase
         { 
             var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
 
-            //TODO: create custom Throw new Error...
+            throw new ErrorOnValidationException(errorMessages);
         }
     }
 }

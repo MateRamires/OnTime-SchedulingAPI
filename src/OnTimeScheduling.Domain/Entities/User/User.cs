@@ -1,5 +1,6 @@
 ﻿using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Enums;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Domain.Entities.User;
 
@@ -19,13 +20,13 @@ public class User : BaseEntity
     public User(Guid? companyId, string name, string email, string passwordHash, UserRole role) 
     {
         if (!Enum.IsDefined(typeof(UserRole), role))
-            throw new ArgumentException("Invalid user role.", nameof(role));
+            throw new DomainRuleException("Invalid user role.");
 
         if (role == UserRole.SUPER_ADMIN && companyId is not null)
-            throw new InvalidOperationException("Super_Admin users must not have a companyId.");
+            throw new DomainRuleException("Super_Admin users must not have a companyId.");
 
         if (role != UserRole.SUPER_ADMIN && CompanyId is null)
-            throw new InvalidOperationException("Non-Super_Admin users must have a companyId.");
+            throw new DomainRuleException("Non-Super_Admin users must have a companyId.");
 
         CompanyId = companyId;
         SetName(name);
@@ -38,7 +39,7 @@ public class User : BaseEntity
     private void SetPasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
-            throw new InvalidOperationException("Password is required.");  
+            throw new DomainRuleException("Password is required.");  
 
         PasswordHash = passwordHash;
 
@@ -47,7 +48,7 @@ public class User : BaseEntity
     private void SetEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-            throw new InvalidOperationException("Email is required.");
+            throw new DomainRuleException("Email is required.");
 
         Email = email;
 
@@ -56,7 +57,7 @@ public class User : BaseEntity
     private void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new InvalidOperationException("Name is required.");
+            throw new DomainRuleException("Name is required.");
 
         Name = name;
 
