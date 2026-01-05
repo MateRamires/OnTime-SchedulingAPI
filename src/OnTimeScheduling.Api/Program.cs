@@ -1,11 +1,16 @@
-using Microsoft.EntityFrameworkCore;
+using OnTimeScheduling.Api.Filters;
 using OnTimeScheduling.Application;
 using OnTimeScheduling.Infrastructure;
-using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddScoped<ExceptionFilter>();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.AddService<ExceptionFilter>();
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
