@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OnTimeScheduling.Domain\OnTimeScheduling.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\OnTimeScheduling.Exceptions\OnTimeScheduling.Exceptions.csproj" />
   </ItemGroup>
 
 </Project>
