@@ -39,7 +39,7 @@ public class CreateUserUseCase : ICreateUserUseCase
         await _userRepository.Add(user);
         await _unitOfWork.Commit();
 
-        return user.Id;
+        return user.Id; //TODO: change this to return token (after login is created)
     }
 
     private async Task Validate(RequestRegisterUserJson request, CancellationToken ct = default) 
