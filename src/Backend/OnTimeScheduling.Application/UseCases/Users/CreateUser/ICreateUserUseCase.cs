@@ -1,8 +1,9 @@
 ﻿using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Responses;
 
 namespace OnTimeScheduling.Application.UseCases.Users.CreateUser;
 
 public interface ICreateUserUseCase
 {
-    public Task<Guid> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default);
+    public Task<ResponseRegisteredUserJson> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default);
 }

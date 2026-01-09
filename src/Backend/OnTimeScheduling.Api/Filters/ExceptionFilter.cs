@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OnTimeScheduling.Communication;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 using System.Diagnostics;
 using System.Net;
@@ -64,10 +64,8 @@ public class ExceptionFilter : IExceptionFilter
     {
         context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        // Mensagem segura (sem detalhes)
         context.Result = new ObjectResult(new ResponseErrorJson("Unexpected error occurred.", traceId));
 
-        // Log completo com stack trace para você debugar
         _logger.LogError(context.Exception, "Unhandled exception. TraceId={TraceId}", traceId);
     }
 

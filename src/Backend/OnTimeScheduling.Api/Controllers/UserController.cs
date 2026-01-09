@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Responses;
 
 namespace OnTimeScheduling.Api.Controllers
 {
@@ -9,8 +10,8 @@ namespace OnTimeScheduling.Api.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        //TODO: Add the expected response or the expected error to every endpoint
         [HttpPost]
+        [ProducesResponseType(typeof(ResponseRegisteredUserJson), StatusCodes.Status201Created)]
         public async Task<IActionResult> Register([FromServices] ICreateUserUseCase useCase, [FromBody] RequestRegisterUserJson request, CancellationToken ct) 
         {
             var result = await useCase.ExecuteAsync(request, ct);

@@ -3,6 +3,7 @@ using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security;
 using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
@@ -21,7 +22,7 @@ public class CreateUserUseCase : ICreateUserUseCase
         _passwordHashService = passwordHashService;
     }
 
-    public async Task<Guid> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
+    public async Task<ResponseRegisteredUserJson> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
     {
 
         await Validate(request, ct);
@@ -39,7 +40,10 @@ public class CreateUserUseCase : ICreateUserUseCase
         await _userRepository.Add(user);
         await _unitOfWork.Commit();
 
-        return user.Id; //TODO: change this to return token (after login is created)
+        return new ResponseRegisteredUserJson //TODO: change this to return token (after login is created)
+        {
+            Name = user.Name
+        }; 
     }
 
     private async Task Validate(RequestRegisterUserJson request, CancellationToken ct = default) 
