@@ -14,7 +14,9 @@ public class RegisterUserValidator : AbstractValidator<RequestRegisterUserJson>
         RuleFor(user => user.Role).IsInEnum().WithMessage("Role is Invalid!");
         When(user => !string.IsNullOrEmpty(user.Email), () =>
         {
-            RuleFor(user => user.Email).EmailAddress().WithMessage("Email is Invalid!");
+            RuleFor(user => user.Email)
+                .EmailAddress().WithMessage("Email is Invalid!")
+                .Must(email => !email.Contains(" ")).WithMessage("Email cannot contain spaces!");
         });
     }
 }

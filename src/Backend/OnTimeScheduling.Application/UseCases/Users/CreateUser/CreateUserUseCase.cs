@@ -6,7 +6,7 @@ using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
-using OnTimeScheduling.Domain.Helpers;
+using OnTimeScheduling.Domain.Extensions;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Users.CreateUser;
@@ -25,6 +25,8 @@ public class CreateUserUseCase : ICreateUserUseCase
 
     public async Task<ResponseRegisteredUserJson> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
     {
+        request.Email = request.Email.SanitizeEmail();
+        request.Name = request.Name.FormatName();
 
         await Validate(request, ct);
 
