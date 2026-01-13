@@ -32,7 +32,7 @@ public class CreateUserUseCase : ICreateUserUseCase
 
         var passwordHash = _passwordHashService.Hash(request.Password);
 
-        var user = new User(
+        var user = new User (
             companyId: null, //TODO: Config the getting companyId from User's claims.
             name: request.Name,
             email: request.Email,
