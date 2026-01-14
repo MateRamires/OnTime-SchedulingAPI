@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
-using OnTimeScheduling.Application.Security;
+using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
 using OnTimeScheduling.Infrastructure.Security;
