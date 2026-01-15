@@ -6,9 +6,7 @@ using OnTimeScheduling.Communication.Responses;
 namespace OnTimeScheduling.Api.Controllers
 {
     
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UserController : ControllerBase
+    public class UserController : OnTimeSchedulingController
     {
         [HttpPost]
         [ProducesResponseType(typeof(ResponseRegisteredUserJson), StatusCodes.Status201Created)]
