@@ -30,7 +30,7 @@ public class JwtTokenGenerator : IAcessTokenGenerator
 
         if (user.CompanyId.HasValue)
         {
-            claims.Add(new Claim("TenantId", user.CompanyId.Value.ToString()));
+            claims.Add(new Claim("CompanyId", user.CompanyId.Value.ToString()));
         }
 
         var tokenDescriptor = new SecurityTokenDescriptor
