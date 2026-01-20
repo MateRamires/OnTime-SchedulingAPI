@@ -1,5 +1,4 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using OnTimeScheduling.Application.Security; // Verifique se o namespace da interface está correto
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Domain.Entities.User;
 using System.IdentityModel.Tokens.Jwt;
