@@ -2,7 +2,7 @@
 
 namespace OnTimeScheduling.Application.Security.Token;
 
-public interface IAcessTokenGenerator
+public interface IAccessTokenGenerator
 {
     string Generate(User user);
 }

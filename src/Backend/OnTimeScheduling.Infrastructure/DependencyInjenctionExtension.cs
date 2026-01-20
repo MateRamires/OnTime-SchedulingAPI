@@ -4,9 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
+using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
 using OnTimeScheduling.Infrastructure.Security;
+using OnTimeScheduling.Infrastructure.Security.Tokens;
 
 namespace OnTimeScheduling.Infrastructure;
 
@@ -24,6 +26,14 @@ public static class DependencyInjenctionExtension
 
         services.AddScoped<IPasswordHashService, PasswordHashService>();
 
+        services.AddScoped<IAccessTokenGenerator>(option =>
+        {
+
+            var signingKey = configuration.GetValue<string>("Settings:Jwt:SigningKey");
+            var expirationTimeMinutes = configuration.GetValue<uint>("Settings:Jwt:ExpirationTimeMinutes");
+
+            return new JwtTokenGenerator(signingKey!, expirationTimeMinutes);
+        });
 
     }
 }

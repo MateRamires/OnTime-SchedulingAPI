@@ -7,7 +7,7 @@ using System.Text;
 
 namespace OnTimeScheduling.Infrastructure.Security.Tokens;
 
-public class JwtTokenGenerator : IAcessTokenGenerator
+public class JwtTokenGenerator : IAccessTokenGenerator
 {
     private readonly string _signingKey;
     private readonly uint _expirationTimeMinutes;
