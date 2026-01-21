@@ -52,6 +52,12 @@ public class ExceptionFilter : IExceptionFilter
                 LogAsInformation(context.Exception, traceId);
                 break;
 
+            case InvalidLoginException ex:
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                context.Result = new UnauthorizedObjectResult(new ResponseErrorJson(ex.Message, traceId));
+                LogAsInformation(context.Exception, traceId);
+                break;
+
             default:
                 context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.Result = new BadRequestObjectResult(new ResponseErrorJson("Business rule violation.", traceId));

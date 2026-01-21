@@ -23,6 +23,14 @@ public sealed class UserRepository : IUserRepository
         return _db.Users.AsNoTracking().AnyAsync(u => u.Email == email && u.Status == RecordStatus.Active, ct);
     }
 
+    public async Task<User?> GetByEmail(string email, CancellationToken ct = default)
+    {
+        email = email.Trim();
+
+        return await _db.Users
+            .FirstOrDefaultAsync(u => u.Email == email && u.Status == RecordStatus.Active, ct);
+    }
+
     public async Task<User?> GetById(Guid id, CancellationToken ct = default)
     {
         return await _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);

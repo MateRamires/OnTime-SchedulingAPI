@@ -3,6 +3,8 @@ using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Enums;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Users.Login;
 
@@ -18,20 +20,20 @@ public class LoginUseCase : ILoginUseCase
         _accessTokenGenerator = accessTokenGenerator;
     }
 
-    public Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
+    public async Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
     {
-        /*var user = await _userRepository.GetByEmail(request.Email, ct);
+        var user = await _userRepository.GetByEmail(request.Email, ct);
 
         if (user is null)
         {
-            throw new InvalidLoginException();
+            throw new InvalidLoginException("Credenciais inválidas!");
         }
 
-        var passwordMatch = _passwordHashService.Verify(request.Password, user.PasswordHash);
+        var passwordResult = _passwordHashService.Verify(user.PasswordHash, request.Password);
 
-        if (!passwordMatch)
+        if (passwordResult == PasswordVerifyResult.Failed)
         {
-            throw new InvalidLoginException();
+            throw new InvalidLoginException("Credenciais inválidas!");
         }
 
         var accessToken = _accessTokenGenerator.Generate(user);
@@ -40,6 +42,6 @@ public class LoginUseCase : ILoginUseCase
         {
             Name = user.Name,
             AccessToken = accessToken
-        };*/
+        };
     }
 }
