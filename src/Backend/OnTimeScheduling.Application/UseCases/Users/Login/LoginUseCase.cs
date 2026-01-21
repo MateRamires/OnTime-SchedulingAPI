@@ -18,7 +18,7 @@ public class LoginUseCase : ILoginUseCase
         _accessTokenGenerator = accessTokenGenerator;
     }
 
-    public Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request)
+    public Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
     {
         /*var user = await _userRepository.GetByEmail(request.Email, ct);
 

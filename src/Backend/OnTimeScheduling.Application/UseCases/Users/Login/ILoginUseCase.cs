@@ -5,5 +5,5 @@ namespace OnTimeScheduling.Application.UseCases.Users.Login;
 
 public interface ILoginUseCase
 {
-    Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request);
+    Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct);
 }
