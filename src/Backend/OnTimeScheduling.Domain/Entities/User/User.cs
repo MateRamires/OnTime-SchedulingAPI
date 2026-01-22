@@ -72,4 +72,9 @@ public class User : BaseEntity
     {
         Status = RecordStatus.Active;
     }
+
+    public void UpdatePasswordHash(string newHash)
+    {
+        SetPasswordHash(newHash);
+    }
 }

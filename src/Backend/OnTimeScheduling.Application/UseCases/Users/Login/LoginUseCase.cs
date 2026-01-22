@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Application.Repositories.Users;
+﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Communication.Requests;
@@ -13,11 +14,13 @@ public class LoginUseCase : ILoginUseCase
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHashService _passwordHashService;
     private readonly IAccessTokenGenerator _accessTokenGenerator;
-    public LoginUseCase(IUserRepository userRepository, IPasswordHashService passwordHashService, IAccessTokenGenerator accessTokenGenerator)
+    private readonly IUnitOfWork _unitOfWork;
+    public LoginUseCase(IUserRepository userRepository, IPasswordHashService passwordHashService, IAccessTokenGenerator accessTokenGenerator, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _passwordHashService = passwordHashService;
         _accessTokenGenerator = accessTokenGenerator;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
@@ -34,6 +37,16 @@ public class LoginUseCase : ILoginUseCase
         if (passwordResult == PasswordVerifyResult.Failed)
         {
             throw new InvalidLoginException("Credenciais inválidas!");
+        }
+
+        if (passwordResult == PasswordVerifyResult.SuccessRehashNeeded)
+        {
+            var newHash = _passwordHashService.Hash(request.Password);
+
+            user.UpdatePasswordHash(newHash);
+
+            _userRepository.Update(user);
+            await _unitOfWork.Commit(ct);
         }
 
         var accessToken = _accessTokenGenerator.Generate(user);
