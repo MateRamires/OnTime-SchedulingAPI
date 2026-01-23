@@ -22,7 +22,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.Email)
             .HasColumnName("email")
-            .HasColumnType("citext")
             .HasMaxLength(200)
             .IsRequired();
 

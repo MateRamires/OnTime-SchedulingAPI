@@ -2,6 +2,7 @@
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
+using OnTimeScheduling.Domain.Extensions;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
 
@@ -18,17 +19,17 @@ public sealed class UserRepository : IUserRepository
 
     public Task<bool> EmailExists(string email, CancellationToken ct = default)
     {
-        email = email.Trim();
+        var normalizedEmail = email.SanitizeEmail();
 
-        return _db.Users.AsNoTracking().AnyAsync(u => u.Email == email && u.Status == RecordStatus.Active, ct);
+        return _db.Users.AsNoTracking().AnyAsync(u => u.Email == normalizedEmail && u.Status == RecordStatus.Active, ct);
     }
 
     public async Task<User?> GetByEmail(string email, CancellationToken ct = default)
     {
-        email = email.Trim();
+        var normalizedEmail = email.SanitizeEmail();
 
         return await _db.Users
-            .FirstOrDefaultAsync(u => u.Email == email && u.Status == RecordStatus.Active, ct);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.Status == RecordStatus.Active, ct);
     }
 
     public async Task<User?> GetById(Guid id, CancellationToken ct = default)

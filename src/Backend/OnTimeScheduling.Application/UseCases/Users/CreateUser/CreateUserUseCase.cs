@@ -1,6 +1,7 @@
 ﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
+using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
@@ -16,11 +17,13 @@ public class CreateUserUseCase : ICreateUserUseCase
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
-    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService)
+    private readonly IAccessTokenGenerator _tokenGenerator;
+    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _passwordHashService = passwordHashService;
+        _tokenGenerator = tokenGenerator;
     }
 
     public async Task<ResponseRegisteredUserJson> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
@@ -43,9 +46,12 @@ public class CreateUserUseCase : ICreateUserUseCase
         await _userRepository.Add(user);
         await _unitOfWork.Commit();
 
+        var token = _tokenGenerator.Generate(user);
+
         return new ResponseRegisteredUserJson //TODO: change this to return token (after login is created)
         {
-            Name = user.Name
+            Name = user.Name,
+            AccessToken = token
         }; 
     }
 
