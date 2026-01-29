@@ -52,10 +52,9 @@ public class ExceptionFilter : IExceptionFilter
                 LogAsInformation(context.Exception, traceId);
                 break;
 
-            case InvalidLoginException ex:
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                context.Result = new UnauthorizedObjectResult(new ResponseErrorJson(ex.Message, traceId));
-                LogAsInformation(context.Exception, traceId);
+            case ErrorOnUnauthorizedException _:
+            case InvalidLoginException _:
+                HandleUnauthorized(context, traceId);
                 break;
 
             default:
@@ -73,6 +72,15 @@ public class ExceptionFilter : IExceptionFilter
         context.Result = new ObjectResult(new ResponseErrorJson("Unexpected error occurred.", traceId));
 
         _logger.LogError(context.Exception, "Unhandled exception. TraceId={TraceId}", traceId);
+    }
+
+    private void HandleUnauthorized(ExceptionContext context, string traceId)
+    {
+        context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+        context.Result = new UnauthorizedObjectResult(
+            new ResponseErrorJson(context.Exception.Message, traceId)
+        );
+        LogAsInformation(context.Exception, traceId);
     }
 
     private void LogAsInformation(Exception ex, string traceId)
