@@ -26,6 +26,10 @@ public static class DependencyInjenctionExtension
 
         services.AddScoped<IPasswordHashService, PasswordHashService>();
 
+        services.AddHttpContextAccessor();
+
+        services.AddScoped<ILoggedUser, LoggedUser>();
+
         services.AddScoped<IAccessTokenGenerator>(option =>
         {
 
