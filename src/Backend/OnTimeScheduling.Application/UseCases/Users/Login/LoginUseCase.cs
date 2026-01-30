@@ -29,14 +29,14 @@ public class LoginUseCase : ILoginUseCase
 
         if (user is null)
         {
-            throw new InvalidLoginException("Credenciais inválidas!");
+            throw new InvalidLoginException("Invalid credentials.");
         }
 
         var passwordResult = _passwordHashService.Verify(user.PasswordHash, request.Password);
 
         if (passwordResult == PasswordVerifyResult.Failed)
         {
-            throw new InvalidLoginException("Credenciais inválidas!");
+            throw new InvalidLoginException("Invalid credentials.");
         }
 
         if (passwordResult == PasswordVerifyResult.SuccessRehashNeeded)
