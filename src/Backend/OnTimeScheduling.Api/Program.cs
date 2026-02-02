@@ -3,7 +3,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnTimeScheduling.Api.Filters;
 using OnTimeScheduling.Application;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Infrastructure;
+using System.Diagnostics;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,6 +69,23 @@ builder.Services.AddAuthentication(config =>
         ValidateLifetime = true, 
         ValidateIssuerSigningKey = true, 
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey!))
+    };
+
+    config.Events = new JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            context.HandleResponse(); 
+            
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            var traceId = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+
+            var response = new ResponseErrorJson("Your session has expired or is invalid. Please login again.", traceId);
+
+            return context.Response.WriteAsJsonAsync(response);
+        }
     };
 });
 
