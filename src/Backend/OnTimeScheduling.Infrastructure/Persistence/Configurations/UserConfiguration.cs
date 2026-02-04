@@ -15,6 +15,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id");
 
+        builder.HasOne<Company>()        
+            .WithMany()                  
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict); 
+
         builder.Property(x => x.Name)
             .HasColumnName("name")
             .HasMaxLength(150)
