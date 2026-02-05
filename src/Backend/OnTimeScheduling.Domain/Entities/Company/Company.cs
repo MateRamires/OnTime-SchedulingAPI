@@ -2,7 +2,7 @@
 using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
-namespace OnTimeScheduling.Domain.Entities.User;
+namespace OnTimeScheduling.Domain.Entities.Company;
 
 public class Company : BaseEntity
 {

@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;

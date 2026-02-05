@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
