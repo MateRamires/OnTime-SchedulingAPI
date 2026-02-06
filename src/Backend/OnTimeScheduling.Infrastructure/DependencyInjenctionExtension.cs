@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
@@ -21,6 +22,8 @@ public static class DependencyInjenctionExtension
         );
 
         services.AddScoped<IUserRepository, UserRepository>();
+
+        services.AddScoped<ICompanyWriteOnlyRepository, CompanyRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

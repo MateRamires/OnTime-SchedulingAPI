@@ -4,5 +4,5 @@ namespace OnTimeScheduling.Application.Repositories.Companies;
 
 public interface ICompanyWriteOnlyRepository
 {
-    Task Add(Company company);
+    Task Add(Company company, CancellationToken ct);
 }
