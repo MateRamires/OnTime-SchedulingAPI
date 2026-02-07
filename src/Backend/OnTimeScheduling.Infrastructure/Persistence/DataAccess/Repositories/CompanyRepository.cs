@@ -5,14 +5,14 @@ namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
 
 public class CompanyRepository : ICompanyWriteOnlyRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly AppDbContext _db;
 
     public CompanyRepository(AppDbContext dbContext)
     {
-        _dbContext = dbContext;
+        _db = dbContext;
     }
     public async Task Add(Company company, CancellationToken ct)
     {
-        await _dbContext.Companies.AddAsync(company, ct);
+        await _db.Companies.AddAsync(company, ct);
     }
 }

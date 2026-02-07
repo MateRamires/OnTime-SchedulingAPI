@@ -48,7 +48,7 @@ public class CreateUserUseCase : ICreateUserUseCase
 
         var token = _tokenGenerator.Generate(user);
 
-        return new ResponseRegisteredUserJson //TODO: change this to return token (after login is created)
+        return new ResponseRegisteredUserJson 
         {
             Name = user.Name,
             AccessToken = token
