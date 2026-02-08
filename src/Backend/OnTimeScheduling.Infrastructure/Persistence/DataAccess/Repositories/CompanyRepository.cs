@@ -11,7 +11,7 @@ public class CompanyRepository : ICompanyWriteOnlyRepository
     {
         _db = dbContext;
     }
-    public async Task Add(Company company, CancellationToken ct)
+    public async Task Add(Company company, CancellationToken ct = default)
     {
         await _db.Companies.AddAsync(company, ct);
     }
