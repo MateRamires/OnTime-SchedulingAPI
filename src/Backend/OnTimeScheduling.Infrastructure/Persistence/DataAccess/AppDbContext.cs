@@ -1,8 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using OnTimeScheduling.Application.Repositories.UnitOfWork;
-using OnTimeScheduling.Domain.Entities.DefaultEntity;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
@@ -10,6 +8,8 @@ namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 public class AppDbContext : DbContext
 {
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<Company> Companies { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

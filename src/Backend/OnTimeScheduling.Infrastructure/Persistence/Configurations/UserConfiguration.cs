@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
@@ -15,6 +16,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id");
 
+        builder.HasOne<Company>()        
+            .WithMany()                  
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict); 
+
         builder.Property(x => x.Name)
             .HasColumnName("name")
             .HasMaxLength(150)
@@ -22,7 +28,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.Email)
             .HasColumnName("email")
-            .HasColumnType("citext")
             .HasMaxLength(200)
             .IsRequired();
 

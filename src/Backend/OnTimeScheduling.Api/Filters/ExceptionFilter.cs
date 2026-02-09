@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OnTimeScheduling.Communication;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 using System.Diagnostics;
 using System.Net;
@@ -20,60 +20,37 @@ public class ExceptionFilter : IExceptionFilter
     {
         var traceId = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
 
-        if (context.Exception is OnTimeSchedulingException)
+        context.Result = context.Exception switch
         {
-            HandleProjectException(context, traceId);
-        }
+            ErrorOnValidationException ex => new BadRequestObjectResult(new ResponseErrorJson(ex.ErrorsMessages.ToList(), traceId)),
+
+            NotFoundException ex => new NotFoundObjectResult(new ResponseErrorJson(ex.Message, traceId)),
+
+            DomainRuleException ex => new BadRequestObjectResult(new ResponseErrorJson(ex.Message, traceId)),
+
+            ErrorOnUnauthorizedException or InvalidLoginException
+                => new UnauthorizedObjectResult(new ResponseErrorJson(context.Exception.Message, traceId)),
+
+            OnTimeSchedulingException
+                => new BadRequestObjectResult(new ResponseErrorJson("Regra de negócio violada.", traceId)),
+
+            _ => new ObjectResult(new ResponseErrorJson("Erro inesperado no servidor.", traceId))
+            { StatusCode = (int)HttpStatusCode.InternalServerError }
+        };
+
+        var statusCode = (context.Result as ObjectResult)?.StatusCode ?? 500;
+        context.HttpContext.Response.StatusCode = statusCode;
+
+        LogException(context.Exception, traceId, statusCode);
+    }
+
+    private void LogException(Exception ex, string traceId, int statusCode)
+    {
+        if (statusCode >= 500)
+            _logger.LogError(ex, "Erro Crítico! TraceId={TraceId}", traceId);
+        else if (statusCode == 400)
+            _logger.LogInformation(ex, "Aviso de Negócio. TraceId={TraceId}", traceId);
         else
-        {
-            HandleUnknownException(context, traceId);
-        }
+            _logger.LogWarning(ex, "Exceção tratada. TraceId={TraceId}, Status={Status}", traceId, statusCode);
     }
-
-    private void HandleProjectException(ExceptionContext context, string traceId)
-    {
-        switch (context.Exception)
-        {
-            case ErrorOnValidationException ex:
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                context.Result = new BadRequestObjectResult(new ResponseErrorJson(ex.ErrorsMessages.ToList(), traceId));
-                LogAsInformation(context.Exception, traceId);
-                break;
-
-            case NotFoundException ex:
-                context.HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-                context.Result = new NotFoundObjectResult(new ResponseErrorJson(ex.Message, traceId));
-                LogAsInformation(context.Exception, traceId);
-                break;
-
-            case DomainRuleException ex:
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                context.Result = new BadRequestObjectResult(new ResponseErrorJson(ex.Message, traceId));
-                LogAsInformation(context.Exception, traceId);
-                break;
-
-            default:
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                context.Result = new BadRequestObjectResult(new ResponseErrorJson("Business rule violation.", traceId));
-                LogAsWarning(context.Exception, traceId);
-                break;
-        }
-    }
-
-    private void HandleUnknownException(ExceptionContext context, string traceId)
-    {
-        context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-        // Mensagem segura (sem detalhes)
-        context.Result = new ObjectResult(new ResponseErrorJson("Unexpected error occurred.", traceId));
-
-        // Log completo com stack trace para você debugar
-        _logger.LogError(context.Exception, "Unhandled exception. TraceId={TraceId}", traceId);
-    }
-
-    private void LogAsInformation(Exception ex, string traceId)
-        => _logger.LogInformation(ex, "Handled project exception. TraceId={TraceId}", traceId);
-
-    private void LogAsWarning(Exception ex, string traceId)
-        => _logger.LogWarning(ex, "Handled project exception (warning). TraceId={TraceId}", traceId);
 }

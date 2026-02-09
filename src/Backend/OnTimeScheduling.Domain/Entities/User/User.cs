@@ -8,9 +8,9 @@ public class User : BaseEntity
 {
     public Guid? CompanyId { get; private set; }
 
-    public string Name { get; private set; } = null;
-    public string Email { get; private set; } = null;
-    public string PasswordHash { get; private set; } = null;
+    public string Name { get; private set; } = null!;
+    public string Email { get; private set; } = null!;
+    public string PasswordHash { get; private set; } = null!;
 
     public UserRole Role { get; private set; }
     public RecordStatus Status { get; private set; }
@@ -25,7 +25,7 @@ public class User : BaseEntity
         if (role == UserRole.SUPER_ADMIN && companyId is not null)
             throw new DomainRuleException("Super_Admin users must not have a companyId.");
 
-        if (role != UserRole.SUPER_ADMIN && CompanyId is null)
+        if (role != UserRole.SUPER_ADMIN && companyId is null)
             throw new DomainRuleException("Non-Super_Admin users must have a companyId.");
 
         CompanyId = companyId;
@@ -71,5 +71,10 @@ public class User : BaseEntity
     public void Activate()
     {
         Status = RecordStatus.Active;
+    }
+
+    public void UpdatePasswordHash(string newHash)
+    {
+        SetPasswordHash(newHash);
     }
 }

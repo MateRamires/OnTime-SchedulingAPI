@@ -1,4 +1,4 @@
-﻿namespace OnTimeScheduling.Communication;
+﻿namespace OnTimeScheduling.Communication.Responses;
 
 public class ResponseErrorJson
 {

@@ -1,6 +1,6 @@
 ﻿using OnTimeScheduling.Domain.Enums;
 
-namespace OnTimeScheduling.Application.Security;
+namespace OnTimeScheduling.Application.Security.Password;
 
 public interface IPasswordHashService
 {

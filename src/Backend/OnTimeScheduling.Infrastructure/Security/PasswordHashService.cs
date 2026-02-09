@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using OnTimeScheduling.Application.Security;
+using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
 
