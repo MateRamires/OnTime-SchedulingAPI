@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace OnTimeScheduling.Domain.Extensions;
 
@@ -17,5 +18,13 @@ public static class StringExtensions
 
         var cleanName = string.Join(" ", name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
         return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(cleanName.ToLower());
+    }
+
+    public static string RemoveNonNumeric(this string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return Regex.Replace(value, "[^0-9]", "");
     }
 }

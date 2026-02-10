@@ -25,7 +25,15 @@ public class RegisterCompanyValidator : AbstractValidator<RequestRegisterCompany
 
         RuleFor(c => c.CNPJ)
             .NotEmpty().WithMessage("CNPJ is required.")
-            .IsValidCNPJ(); 
+            .IsValidCNPJ();
+
+        RuleFor(c => c.CompanyEmail).NotEmpty().WithMessage("Company Email is required.");
+        When(c => !string.IsNullOrEmpty(c.CompanyEmail), () =>
+        {
+            RuleFor(c => c.CompanyEmail)
+                .EmailAddress().WithMessage("Company Email is invalid.")
+                .MaximumLength(200);
+        });
 
         RuleFor(c => c.Name)
             .NotEmpty().WithMessage("Admin Name is required.")

@@ -23,7 +23,10 @@ public static class DependencyInjenctionExtension
 
         services.AddScoped<IUserRepository, UserRepository>();
 
-        services.AddScoped<ICompanyWriteOnlyRepository, CompanyRepository>();
+        //Company Repository
+        services.AddScoped<CompanyRepository>();
+        services.AddScoped<ICompanyWriteOnlyRepository>(sp => sp.GetRequiredService<CompanyRepository>());
+        services.AddScoped<ICompanyReadOnlyRepository>(sp => sp.GetRequiredService<CompanyRepository>());
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
