@@ -5,10 +5,12 @@ using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
+using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
-using OnTimeScheduling.Infrastructure.Security;
+using OnTimeScheduling.Infrastructure.Security.Password;
+using OnTimeScheduling.Infrastructure.Security.Tenant;
 using OnTimeScheduling.Infrastructure.Security.Tokens;
 
 namespace OnTimeScheduling.Infrastructure;
@@ -31,6 +33,8 @@ public static class DependencyInjenctionExtension
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IPasswordHashService, PasswordHashService>();
+
+        services.AddScoped<ITenantProvider, TenantProvider>();
 
         services.AddHttpContextAccessor();
 
