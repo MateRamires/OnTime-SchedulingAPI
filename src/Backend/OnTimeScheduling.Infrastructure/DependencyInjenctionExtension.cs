@@ -34,6 +34,7 @@ public static class DependencyInjenctionExtension
         //Company Repository
         services.AddScoped<LocationRepository>();
         services.AddScoped<ILocationWriteOnlyRepository>(sp => sp.GetRequiredService<LocationRepository>());
+        services.AddScoped<ILocationReadOnlyRepository>(sp => sp.GetRequiredService<LocationRepository>());
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

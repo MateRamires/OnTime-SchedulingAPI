@@ -12,11 +12,13 @@ namespace OnTimeScheduling.Application.UseCases.Locations;
 public class RegisterLocationUseCase : IRegisterLocationUseCase
 {
     private readonly ILocationWriteOnlyRepository _repository;
+    private readonly ILocationReadOnlyRepository _readRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantProvider _tenantProvider;
-    public RegisterLocationUseCase(ILocationWriteOnlyRepository repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
+    public RegisterLocationUseCase(ILocationWriteOnlyRepository repository, ILocationReadOnlyRepository readRepository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
     {
         _repository = repository;
+        _readRepository = readRepository;
         _unitOfWork = unitOfWork;
         _tenantProvider = tenantProvider;
     }
@@ -48,12 +50,16 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         var validator = new RegisterLocationValidator();
         var result = validator.Validate(request);
 
-        //TODO: Implementar o existsWithName abaixo
-        /*
-        var nameExists = await _readRepository.ExistsWithNameInCompany(request.Name, _tenantProvider.CompanyId.Value, ct);
-        if (nameExists)
-            result.Errors.Add(new FluentValidation.Results.ValidationFailure("Name", "A location with this name already exists in your company."));
-        */
+        var currentCompanyId = _tenantProvider.CompanyId;
+
+        if (currentCompanyId.HasValue)
+        {
+            var nameExists = await _readRepository.ExistsActiveLocationWithName(request.Name, currentCompanyId.Value, ct);
+            if (nameExists)
+            {
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "A location with this name already exists in your company."));
+            }
+        }
 
         if (!result.IsValid)
         {
