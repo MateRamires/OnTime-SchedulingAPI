@@ -1,6 +1,8 @@
-﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
+﻿using FluentValidation.Results;
+using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
+using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
@@ -18,12 +20,14 @@ public class CreateUserUseCase : ICreateUserUseCase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
     private readonly IAccessTokenGenerator _tokenGenerator;
-    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator)
+    private readonly ITenantProvider _tenantProvider;
+    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator, ITenantProvider tenantProvider)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _passwordHashService = passwordHashService;
         _tokenGenerator = tokenGenerator;
+        _tenantProvider = tenantProvider;
     }
 
     public async Task<ResponseRegisteredUserJson> ExecuteAsync(RequestRegisterUserJson request, CancellationToken ct = default)
@@ -32,11 +36,11 @@ public class CreateUserUseCase : ICreateUserUseCase
         request.Name = request.Name.FormatName();
 
         await Validate(request, ct);
-
+       
         var passwordHash = _passwordHashService.Hash(request.Password);
 
         var user = new User (
-            companyId: null, //TODO: Config the getting companyId from User's claims.
+            companyId: _tenantProvider.CompanyId!.Value,
             name: request.Name,
             email: request.Email,
             passwordHash: passwordHash,
@@ -61,9 +65,17 @@ public class CreateUserUseCase : ICreateUserUseCase
 
         var result = validator.Validate(request);
 
+        var currentCompanyId = _tenantProvider.CompanyId;
+        if (currentCompanyId is null)
+            result.Errors.Add(new ValidationFailure(string.Empty, "Only users linked to a company can create new employees."));
+        
+
+        if ((UserRole)(int)request.Role == UserRole.SUPER_ADMIN)
+            result.Errors.Add(new ValidationFailure(string.Empty, "Operation not allowed for this role."));
+
         var emailExists = await _userRepository.EmailExists(request.Email, ct);
         if (emailExists)
-            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The Email is Already Registered!"));
+            result.Errors.Add(new ValidationFailure(string.Empty, "The Email is Already Registered!"));
 
         if (!result.IsValid) 
         { 

@@ -11,6 +11,7 @@ namespace OnTimeScheduling.Api.Controllers
     public class UserController : OnTimeSchedulingController
     {
         [HttpPost]
+        [Authorize(Roles = "COMPANY_ADMIN")]
         [ProducesResponseType(typeof(ResponseRegisteredUserJson), StatusCodes.Status201Created)]
         public async Task<IActionResult> Register([FromServices] ICreateUserUseCase useCase, [FromBody] RequestRegisterUserJson request, CancellationToken ct) 
         {
