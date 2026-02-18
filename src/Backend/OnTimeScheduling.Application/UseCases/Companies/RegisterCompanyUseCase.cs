@@ -21,7 +21,7 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
     public RegisterCompanyUseCase(ICompanyWriteOnlyRepository companyWriteOnlyRepository, IUserRepository userRepository, 
-        IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator, ICompanyReadOnlyRepository companyReadRepository)
+        IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, ICompanyReadOnlyRepository companyReadRepository)
     {
         _companyRepository = companyWriteOnlyRepository;
         _userRepository = userRepository;

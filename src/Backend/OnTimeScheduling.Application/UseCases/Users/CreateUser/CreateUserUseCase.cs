@@ -20,7 +20,7 @@ public class CreateUserUseCase : ICreateUserUseCase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
     private readonly ITenantProvider _tenantProvider;
-    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator, ITenantProvider tenantProvider)
+    public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, ITenantProvider tenantProvider)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
