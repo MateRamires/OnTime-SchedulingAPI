@@ -20,7 +20,6 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
     private readonly ICompanyReadOnlyRepository _companyReadRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
-    private readonly IAccessTokenGenerator _tokenGenerator;
     public RegisterCompanyUseCase(ICompanyWriteOnlyRepository companyWriteOnlyRepository, IUserRepository userRepository, 
         IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator, ICompanyReadOnlyRepository companyReadRepository)
     {
@@ -28,7 +27,6 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _passwordHashService = passwordHashService;
-        _tokenGenerator = tokenGenerator;
         _companyReadRepository = companyReadRepository;
     }
     public async Task<ResponseRegisterCompanyJson> ExecuteAsync(RequestRegisterCompanyJson request, CancellationToken ct = default)
@@ -65,12 +63,10 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
 
         await _unitOfWork.Commit();
 
-        var token = _tokenGenerator.Generate(userAdmin);
 
         return new ResponseRegisterCompanyJson
         {
-            Name = company.FantasyName,
-            Token = token 
+            Name = company.FantasyName
         };
     }
 

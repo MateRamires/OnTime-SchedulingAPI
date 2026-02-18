@@ -19,14 +19,12 @@ public class CreateUserUseCase : ICreateUserUseCase
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
-    private readonly IAccessTokenGenerator _tokenGenerator;
     private readonly ITenantProvider _tenantProvider;
     public CreateUserUseCase(IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator, ITenantProvider tenantProvider)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _passwordHashService = passwordHashService;
-        _tokenGenerator = tokenGenerator;
         _tenantProvider = tenantProvider;
     }
 
@@ -50,12 +48,9 @@ public class CreateUserUseCase : ICreateUserUseCase
         await _userRepository.Add(user);
         await _unitOfWork.Commit();
 
-        var token = _tokenGenerator.Generate(user);
-
         return new ResponseRegisteredUserJson 
         {
-            Name = user.Name,
-            AccessToken = token
+            Name = user.Name
         }; 
     }
 
