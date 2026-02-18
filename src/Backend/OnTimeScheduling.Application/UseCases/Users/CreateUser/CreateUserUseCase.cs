@@ -3,7 +3,6 @@ using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Application.Security.Tenant;
-using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.Validators.Users;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
