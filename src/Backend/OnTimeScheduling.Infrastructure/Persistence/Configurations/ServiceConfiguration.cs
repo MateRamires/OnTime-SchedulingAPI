@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.Services;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
@@ -48,6 +49,9 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
             .HasColumnName("updated_at_utc")
             .IsRequired();
 
-        builder.HasIndex(x => x.CompanyId);
+        builder.HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;
+using OnTimeScheduling.Domain.Entities.Services;
 using OnTimeScheduling.Domain.Entities.User;
 using System.Reflection;
 
@@ -15,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Company> Companies { get; set; }
     public DbSet<Location> Locations { get; set; }
+    public DbSet<Service> Services { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {
