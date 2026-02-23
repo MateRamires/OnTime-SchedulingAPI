@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<Company> Companies { get; set; }
     public DbSet<Location> Locations { get; set; }
     public DbSet<Service> Services { get; set; }
+    public DbSet<ProfessionalService> ProfessionalServices { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {

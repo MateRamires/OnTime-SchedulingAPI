@@ -26,6 +26,7 @@ public class RegisterServiceUseCase
 
     public async Task<ResponseRegisterServiceJson> ExecuteAsync(RequestRegisterServiceJson request, CancellationToken ct = default)
     {
+        //TODO: request can have a professionalIds so the user can register the service + a bunch of users that can do said service
         request.Name = request.Name.Trim();
 
         if (!string.IsNullOrWhiteSpace(request.Description))
