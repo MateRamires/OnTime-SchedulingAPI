@@ -18,8 +18,8 @@ public class DbInitializer
 
             var rootUser = new User(
                 companyId: null,
-                name: "System Root",
-                email: "root@ontime.com",
+                name: "Root",
+                email: "matheus@gmail.com",
                 passwordHash: passwordHash,
                 role: UserRole.SUPER_ADMIN
             );
