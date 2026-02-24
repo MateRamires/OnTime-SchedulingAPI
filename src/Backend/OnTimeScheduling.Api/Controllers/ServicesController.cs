@@ -22,4 +22,19 @@ public class ServicesController : OnTimeSchedulingController
 
         return Created(string.Empty, response);
     }
+
+    [HttpPost("link")]
+    [Authorize(Roles = "COMPANY_ADMIN")]
+    [ProducesResponseType(typeof(ResponseLinkProfessionalServiceJson), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> LinkService(
+        [FromServices] ILinkProfessionalServiceUseCase useCase,
+        [FromBody] RequestLinkProfessionalServiceJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+
+        return Created(string.Empty, response);
+    }
 }
