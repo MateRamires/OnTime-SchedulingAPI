@@ -17,4 +17,8 @@
     <ProjectReference Include="..\OnTimeScheduling.Domain\OnTimeScheduling.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repositories\Schedules\" />
+  </ItemGroup>
+
 </Project>
