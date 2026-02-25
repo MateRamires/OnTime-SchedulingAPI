@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Api.Controllers
 {
@@ -11,6 +12,7 @@ namespace OnTimeScheduling.Api.Controllers
     public class UserController : OnTimeSchedulingController
     {
         [HttpPost]
+        [Authorize(Roles = "COMPANY_ADMIN")]
         [ProducesResponseType(typeof(ResponseRegisteredUserJson), StatusCodes.Status201Created)]
         public async Task<IActionResult> Register([FromServices] ICreateUserUseCase useCase, [FromBody] RequestRegisterUserJson request, CancellationToken ct) 
         {
@@ -36,6 +38,18 @@ namespace OnTimeScheduling.Api.Controllers
             };
 
             return Ok(response);
+        }
+
+        [HttpPost("admin")]
+        [Authorize(Roles = "SUPER_ADMIN")]
+        [ProducesResponseType(typeof(ResponseRegisteredUserJson), StatusCodes.Status201Created)]
+        public async Task<IActionResult> RegisterSuperAdmin([FromServices] IRegisterSuperAdminUseCase useCase, [FromBody] RequestRegisterUserJson request, CancellationToken ct)
+        {
+            request.Role = (Communication.Enums.UserRole)(int)UserRole.SUPER_ADMIN;
+
+            var result = await useCase.ExecuteAsync(request, ct);
+
+            return Created(string.Empty, result);
         }
     }
 }

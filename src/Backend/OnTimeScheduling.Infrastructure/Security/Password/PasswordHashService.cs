@@ -3,7 +3,7 @@ using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Domain.Entities.User;
 using OnTimeScheduling.Domain.Enums;
 
-namespace OnTimeScheduling.Infrastructure.Security;
+namespace OnTimeScheduling.Infrastructure.Security.Password;
 
 public class PasswordHashService : IPasswordHashService
 {

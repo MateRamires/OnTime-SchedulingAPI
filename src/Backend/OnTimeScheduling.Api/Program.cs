@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnTimeScheduling.Api.Filters;
 using OnTimeScheduling.Application;
+using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Infrastructure;
+using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 using System.Diagnostics;
 using System.Text;
 
@@ -97,6 +100,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
+await MigrateDatabase(app);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -112,3 +117,32 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+
+
+async Task MigrateDatabase(WebApplication webApp)
+{
+    using var scope = webApp.Services.CreateScope();
+    var services = scope.ServiceProvider;
+
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        var passwordHasher = services.GetRequiredService<IPasswordHashService>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Starting database migration and seeding...");
+
+        await context.Database.MigrateAsync();
+
+        await DbInitializer.Seed(context, passwordHasher);
+
+        logger.LogInformation("Database is ready for use.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"CRITICAL ERROR DURING STARTUP: {ex.Message}");
+        throw;
+    }
+}

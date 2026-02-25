@@ -2,7 +2,6 @@
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
-using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.Validators.Companies;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
@@ -17,24 +16,26 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
 {
     private readonly ICompanyWriteOnlyRepository _companyRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ICompanyReadOnlyRepository _companyReadRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHashService _passwordHashService;
-    private readonly IAccessTokenGenerator _tokenGenerator;
     public RegisterCompanyUseCase(ICompanyWriteOnlyRepository companyWriteOnlyRepository, IUserRepository userRepository, 
-        IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, IAccessTokenGenerator tokenGenerator)
+        IUnitOfWork unitOfWork, IPasswordHashService passwordHashService, ICompanyReadOnlyRepository companyReadRepository)
     {
         _companyRepository = companyWriteOnlyRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _passwordHashService = passwordHashService;
-        _tokenGenerator = tokenGenerator;
+        _companyReadRepository = companyReadRepository;
     }
     public async Task<ResponseRegisterCompanyJson> ExecuteAsync(RequestRegisterCompanyJson request, CancellationToken ct = default)
     {
        
         request.Email = request.Email.SanitizeEmail();
+        request.CompanyEmail = request.CompanyEmail.SanitizeEmail();
         request.Name = request.Name.FormatName();
-        // TODO: sanitizar CNPJ/Telefone aqui
+        request.CNPJ = request.CNPJ.RemoveNonNumeric(); 
+        request.Phone = request.Phone.RemoveNonNumeric();
 
         await Validate(request, ct);
 
@@ -43,7 +44,7 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
             request.FantasyName,
             request.CNPJ,
             request.Phone,
-            request.Email // TODO: Criar email especifico da empresa (atualmente pega email do user)
+            request.CompanyEmail
         );
 
         var passwordHash = _passwordHashService.Hash(request.Password);
@@ -61,12 +62,10 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
 
         await _unitOfWork.Commit();
 
-        var token = _tokenGenerator.Generate(userAdmin);
 
         return new ResponseRegisterCompanyJson
         {
-            Name = company.FantasyName,
-            Token = token 
+            Name = company.FantasyName
         };
     }
 
@@ -78,9 +77,10 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
         var emailExists = await _userRepository.EmailExists(request.Email, ct);
         if (emailExists)
             result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The Email is Already Registered!"));
-        
 
-        // TODO: Validar se CNPJ já existe via Repositório de ReadOnly da Company
+        var cnpjExists = await _companyReadRepository.ExistsActiveCompanyWithCNPJ(request.CNPJ, ct);
+        if (cnpjExists)
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "Company with this CNPJ is already registered!"));
 
         if (!result.IsValid)
         {

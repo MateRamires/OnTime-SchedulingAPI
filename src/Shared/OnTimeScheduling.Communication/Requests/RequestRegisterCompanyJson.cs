@@ -12,4 +12,5 @@ public class RequestRegisterCompanyJson
     public string FantasyName { get; set; } = string.Empty;
     public string CNPJ { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+    public string CompanyEmail { get; set; } = string.Empty;
 }
