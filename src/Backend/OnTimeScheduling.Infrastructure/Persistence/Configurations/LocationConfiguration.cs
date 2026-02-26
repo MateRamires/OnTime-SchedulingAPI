@@ -41,5 +41,8 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at_utc")
             .IsRequired();
+
+        builder.HasIndex(x => new { x.CompanyId, x.Status });
+        builder.HasIndex(x => new { x.CompanyId, x.Name });
     }
 }

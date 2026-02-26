@@ -53,5 +53,8 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
             .WithMany()
             .HasForeignKey(x => x.CompanyId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.CompanyId, x.Status });
+        builder.HasIndex(x => new { x.CompanyId, x.Name });
     }
 }

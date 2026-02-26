@@ -58,6 +58,7 @@ public class ProfessionalScheduleConfiguration : IEntityTypeConfiguration<Profes
             .HasForeignKey(x => x.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => new { x.UserId, x.DayOfWeek });
+        builder.HasIndex(x => new { x.CompanyId, x.UserId, x.DayOfWeek });        
+        builder.HasIndex(x => new { x.CompanyId, x.LocationId, x.DayOfWeek });
     }
 }

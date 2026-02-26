@@ -55,5 +55,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at_utc")
             .IsRequired();
+
+        builder.HasIndex(x => x.CompanyId);
+        builder.HasIndex(x => new { x.CompanyId, x.Role });
+        builder.HasIndex(x => new { x.CompanyId, x.Status });
     }
 }
