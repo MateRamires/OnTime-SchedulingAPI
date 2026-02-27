@@ -8,7 +8,7 @@ using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Services;
 
-public class RegisterServiceUseCase
+public class RegisterServiceUseCase : IRegisterServiceUseCase
 {
     private readonly IServiceWriteOnlyRepository _serviceWriteRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
