@@ -42,6 +42,11 @@ public static class DependencyInjenctionExtension
         services.AddScoped<IServiceWriteOnlyRepository>(sp => sp.GetRequiredService<ServiceRepository>());
         services.AddScoped<IServiceReadOnlyRepository>(sp => sp.GetRequiredService<ServiceRepository>());
 
+        //Service Repository
+        services.AddScoped<ProfessionalServiceRepository>();
+        services.AddScoped<IProfessionalServiceWriteOnlyRepository>(sp => sp.GetRequiredService<ProfessionalServiceRepository>());
+        services.AddScoped<IProfessionalServiceReadOnlyRepository>(sp => sp.GetRequiredService<ProfessionalServiceRepository>());
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IPasswordHashService, PasswordHashService>();
