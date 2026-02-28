@@ -9,7 +9,13 @@ public class ProfessionalScheduleConfiguration : IEntityTypeConfiguration<Profes
 {
     public void Configure(EntityTypeBuilder<ProfessionalSchedule> builder)
     {
-        builder.ToTable("professional_schedules");
+        builder.ToTable("professional_schedules", tb =>
+        {
+            tb.HasCheckConstraint(
+                "ck_professional_schedules_start_before_end",
+                "start_time < end_time"
+            );
+        });
 
         builder.HasKey(x => x.Id);
 

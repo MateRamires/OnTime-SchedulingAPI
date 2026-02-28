@@ -9,7 +9,18 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 {
     public void Configure(EntityTypeBuilder<Service> builder)
     {
-        builder.ToTable("services");
+        builder.ToTable("services", tb =>
+        {
+            tb.HasCheckConstraint(
+                "ck_services_duration_positive",
+                "duration_in_minutes > 0"
+            );
+
+            tb.HasCheckConstraint(
+                "ck_services_price_non_negative",
+                "price >= 0"
+            );
+        });
 
         builder.HasKey(x => x.Id);
 

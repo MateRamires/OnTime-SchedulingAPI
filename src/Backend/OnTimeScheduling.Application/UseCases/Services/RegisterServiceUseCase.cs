@@ -32,7 +32,6 @@ public class RegisterServiceUseCase : IRegisterServiceUseCase
         if (!string.IsNullOrWhiteSpace(request.Description))
             request.Description = request.Description.Trim();
 
-        //TODO: Make the Validator safer for numbers (price + duration). Add a new error if the user sends a invalid caracter (letter or special caracter)
         await Validate(request, ct);
 
         var service = new Service(
@@ -54,6 +53,7 @@ public class RegisterServiceUseCase : IRegisterServiceUseCase
 
     private async Task Validate(RequestRegisterServiceJson request, CancellationToken ct = default)
     {
+        //TODO: Make the Validator safer for numbers (price + duration). Add a new error if the user sends a invalid caracter (letter or special caracter) 
         var validator = new RegisterServiceValidator();
         var result = validator.Validate(request);
 
