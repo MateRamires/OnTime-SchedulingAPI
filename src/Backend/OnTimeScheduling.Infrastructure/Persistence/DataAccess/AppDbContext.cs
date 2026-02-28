@@ -15,11 +15,11 @@ public class AppDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
     public DbSet<User> Users => Set<User>();
-    public DbSet<Company> Companies { get; set; }
-    public DbSet<Location> Locations { get; set; }
-    public DbSet<Service> Services { get; set; }
-    public DbSet<ProfessionalService> ProfessionalServices { get; set; }
-    public DbSet<ProfessionalSchedule> ProfessionalSchedules { get; set; }
+    public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<ProfessionalService> ProfessionalServices => Set<ProfessionalService>();
+    public DbSet<ProfessionalSchedule> ProfessionalSchedules => Set<ProfessionalSchedule>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {
