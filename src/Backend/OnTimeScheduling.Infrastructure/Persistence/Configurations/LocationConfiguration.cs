@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.Locations;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
@@ -41,6 +42,11 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at_utc")
             .IsRequired();
+
+        builder.HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => new { x.CompanyId, x.Status });
         builder.HasIndex(x => new { x.CompanyId, x.Name });

@@ -13,6 +13,9 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id")
             .IsRequired();
