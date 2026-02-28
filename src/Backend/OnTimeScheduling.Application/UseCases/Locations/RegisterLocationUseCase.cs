@@ -56,9 +56,8 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         {
             var nameExists = await _readRepository.ExistsActiveLocationWithName(request.Name, currentCompanyId.Value, ct);
             if (nameExists)
-            {
                 result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "A location with this name already exists in your company."));
-            }
+            
         }
 
         if (!result.IsValid)

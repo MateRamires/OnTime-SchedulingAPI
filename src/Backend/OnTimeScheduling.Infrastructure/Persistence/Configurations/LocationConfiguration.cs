@@ -49,6 +49,6 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => new { x.CompanyId, x.Status });
-        builder.HasIndex(x => new { x.CompanyId, x.Name });
+        builder.HasIndex(x => new { x.CompanyId, x.Name }).IsUnique();
     }
 }
