@@ -61,6 +61,12 @@ public class AppDbContext : DbContext
                 {
                     entry.Entity.CompanyId = currentCompanyId.Value;
                 }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Multi-tenant violation: The entity '{entry.Entity.GetType().Name}' " +
+                        "requires a valid CompanyId, but the current tenant context is null or empty.");
+                }
             }
         }
 
