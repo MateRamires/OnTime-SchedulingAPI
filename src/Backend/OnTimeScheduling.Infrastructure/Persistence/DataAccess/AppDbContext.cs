@@ -7,6 +7,7 @@ using OnTimeScheduling.Domain.Entities.Locations;
 using OnTimeScheduling.Domain.Entities.Schedules;
 using OnTimeScheduling.Domain.Entities.Services;
 using OnTimeScheduling.Domain.Entities.User;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 using System.Reflection;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
@@ -63,7 +64,7 @@ public class AppDbContext : DbContext
                 }
                 else
                 {
-                    throw new InvalidOperationException(
+                    throw new DomainRuleException(
                         $"Multi-tenant violation: The entity '{entry.Entity.GetType().Name}' " +
                         "requires a valid CompanyId, but the current tenant context is null or empty.");
                 }
