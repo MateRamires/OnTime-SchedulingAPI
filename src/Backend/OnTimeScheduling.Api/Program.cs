@@ -8,6 +8,7 @@ using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Infrastructure;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
+using System;
 using System.Diagnostics;
 using System.Text;
 
@@ -130,13 +131,14 @@ async Task MigrateDatabase(WebApplication webApp)
     {
         var context = services.GetRequiredService<AppDbContext>();
         var passwordHasher = services.GetRequiredService<IPasswordHashService>();
+        var configuration = services.GetRequiredService<IConfiguration>();
         var logger = services.GetRequiredService<ILogger<Program>>();
 
         logger.LogInformation("Starting database migration and seeding...");
 
         await context.Database.MigrateAsync();
 
-        await DbInitializer.Seed(context, passwordHasher);
+        await DbInitializer.Seed(context, passwordHasher, configuration);
 
         logger.LogInformation("Database is ready for use.");
     }
