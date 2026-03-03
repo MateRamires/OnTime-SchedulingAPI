@@ -9,7 +9,7 @@ namespace OnTimeScheduling.Api.Controllers;
 public class ProfessionalSchedulesController : OnTimeSchedulingController
 {
     [HttpPost]
-    [Authorize(Roles = "COMPANY_ADMIN")] //Only the manager can set the schedule of a Employee
+    [Authorize(Roles = "COMPANY_ADMIN")]
     [ProducesResponseType(typeof(ResponseRegisterScheduleJson), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
