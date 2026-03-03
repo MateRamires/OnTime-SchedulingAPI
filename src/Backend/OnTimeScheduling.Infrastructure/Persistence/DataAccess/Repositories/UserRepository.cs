@@ -37,6 +37,12 @@ public sealed class UserRepository : IUserRepository
         return await _db.Users.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
+    public async Task<User?> GetByIdAndCompany(Guid id, Guid companyId, CancellationToken ct = default)
+    {
+        return await _db.Users
+            .FirstOrDefaultAsync(x => x.Id == id && x.CompanyId == companyId && x.Status == RecordStatus.Active, ct);
+    }
+
     public void Update(User user)
     {
         _db.Users.Update(user);

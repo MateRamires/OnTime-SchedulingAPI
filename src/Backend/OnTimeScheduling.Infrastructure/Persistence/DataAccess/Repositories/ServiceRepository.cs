@@ -24,4 +24,11 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
         return await _dbContext.Services
             .AnyAsync(s => s.Name.ToLower() == name.ToLower() && s.Status == RecordStatus.Active, ct);
     }
+
+    public async Task<bool> ExistsActiveById(Guid serviceId, CancellationToken ct = default)
+    {
+        return await _dbContext.Services
+            .AnyAsync(s => s.Id == serviceId && s.Status == RecordStatus.Active, ct);
+    }
+
 }
