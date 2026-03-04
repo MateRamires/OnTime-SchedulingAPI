@@ -8,7 +8,7 @@ using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Schedules;
 
-public class RegisterScheduleUseCase
+public class RegisterScheduleUseCase : IRegisterScheduleUseCase
 {
     private readonly IProfessionalScheduleWriteOnlyRepository _writeRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _readRepository;
