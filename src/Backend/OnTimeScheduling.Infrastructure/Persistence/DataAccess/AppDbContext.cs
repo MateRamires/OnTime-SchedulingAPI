@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Domain.Entities.Appointments;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;
@@ -21,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ProfessionalService> ProfessionalServices => Set<ProfessionalService>();
     public DbSet<ProfessionalSchedule> ProfessionalSchedules => Set<ProfessionalSchedule>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {
