@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;
+using OnTimeScheduling.Application.UseCases.Schedules;
 using OnTimeScheduling.Application.UseCases.Services;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Application.UseCases.Users.Login;
@@ -18,5 +19,6 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRegisterLocationUseCase, RegisterLocationUseCase>();
         services.AddScoped<IRegisterServiceUseCase, RegisterServiceUseCase>();
         services.AddScoped<ILinkProfessionalServiceUseCase, LinkProfessionalServiceUseCase>();
+        services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
     }
 }
