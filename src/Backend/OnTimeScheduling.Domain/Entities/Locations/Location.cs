@@ -28,7 +28,6 @@ public class Location : TenantEntity
             throw new DomainRuleException("Location name is required.");
 
         Name = name;
-        Touch();
     }
 
     public void SetAddress(string address)
@@ -37,18 +36,15 @@ public class Location : TenantEntity
             throw new DomainRuleException("Address is required.");
 
         Address = address;
-        Touch();
     }
 
     public void Inactivate()
     {
         Status = RecordStatus.Inactive;
-        Touch();
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
-        Touch();
     }
 }
