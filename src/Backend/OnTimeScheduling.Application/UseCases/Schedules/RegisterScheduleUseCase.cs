@@ -1,9 +1,13 @@
-﻿using OnTimeScheduling.Application.Repositories.Schedules;
+﻿using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Schedules;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.Schedules;
+using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Schedules;
@@ -12,15 +16,24 @@ public class RegisterScheduleUseCase : IRegisterScheduleUseCase
 {
     private readonly IProfessionalScheduleWriteOnlyRepository _writeRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _readRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
+    private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
     public RegisterScheduleUseCase(
         IProfessionalScheduleWriteOnlyRepository writeRepository,
         IProfessionalScheduleReadOnlyRepository readRepository,
+        IUserRepository userRepository,
+        ILocationReadOnlyRepository locationReadOnlyRepository,
+        ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
         _writeRepository = writeRepository;
         _readRepository = readRepository;
+        _userRepository = userRepository;
+        _locationReadOnlyRepository = locationReadOnlyRepository;
+        _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
 
@@ -49,6 +62,26 @@ public class RegisterScheduleUseCase : IRegisterScheduleUseCase
     {
         var validator = new RegisterScheduleValidator();
         var result = validator.Validate(request);
+
+        if (!_tenantProvider.CompanyId.HasValue)
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The authenticated user does not have a valid tenant context."));
+
+        if (_tenantProvider.CompanyId.HasValue)
+        {
+            var companyId = _tenantProvider.CompanyId.Value;
+
+            var professional = await _userRepository.GetByIdAndCompany(request.UserId, companyId, ct);
+            if (professional is null)
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "Professional not found in this tenant."));
+            else if (professional.Role != UserRole.PROVIDER)
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "Only provider users can have schedules."));
+            
+
+            var locationExists = await _locationReadOnlyRepository.ExistsActiveLocationById(request.LocationId, ct);
+            if (!locationExists)
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "Location not found in this tenant."));
+        }
+
 
         var hasOverlap = await _readRepository.HasOverlappingSchedule(
             request.UserId,
