@@ -5,6 +5,7 @@ using OnTimeScheduling.Application.Validators.Locations;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.Locations;
+using OnTimeScheduling.Domain.Extensions;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Locations;
@@ -24,6 +25,9 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
     }
     public async Task<ResponseRegisterLocationJson> ExecuteAsync(RequestRegisterLocationJson request, CancellationToken ct)
     {
+        request.Name = request.Name.FormatName();
+        request.Address = request.Address?.Trim() ?? string.Empty;
+
         await Validate(request, ct);
 
         var companyId = _tenantProvider.CompanyId
@@ -51,6 +55,9 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         var result = validator.Validate(request);
 
         var currentCompanyId = _tenantProvider.CompanyId;
+
+        if (!currentCompanyId.HasValue)
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The authenticated user does not have a valid tenant context."));
 
         if (currentCompanyId.HasValue)
         {
