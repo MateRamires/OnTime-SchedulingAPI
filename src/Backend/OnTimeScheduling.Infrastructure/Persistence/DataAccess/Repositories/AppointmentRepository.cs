@@ -33,9 +33,9 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
         return await _dbContext.Appointments
             .AnyAsync(a =>
                 a.ProfessionalId == professionalId &&
-                a.Status != AppointmentStatus.Canceled && 
-                a.StartTime < newAppointmentEndTime &&
-                a.EndTime > newAppointmentStartTime,
+                a.Status != AppointmentStatus.Canceled &&
+                //!(newAppointmentEndTime <= a.StartTime || newAppointmentStartTime >= a.EndTime),
+                a.StartTime >= newAppointmentStartTime && a.StartTime < newAppointmentEndTime,
             ct);
     }
 
