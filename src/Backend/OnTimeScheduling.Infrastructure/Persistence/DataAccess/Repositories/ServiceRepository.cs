@@ -14,6 +14,8 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
         _dbContext = dbContext;
     }
 
+    //TODO: checar necessidade de colocar AsNoTracking em algum dos metodos
+
     public async Task Add(Service service, CancellationToken ct = default)
     {
         await _dbContext.Services.AddAsync(service, ct);
