@@ -31,4 +31,9 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
             .AnyAsync(s => s.Id == serviceId && s.Status == RecordStatus.Active, ct);
     }
 
+    public async Task<Service?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _dbContext.Services
+            .FirstOrDefaultAsync(s => s.Id == id && s.Status == RecordStatus.Active, ct);
+    }
 }

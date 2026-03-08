@@ -35,17 +35,13 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     {
         ValidateBasicFields(request);
 
-        // 2. Busca o serviço para descobrir a duração dele
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        // 3. Calcula a data/hora de término
         var endTime = request.StartTime.AddMinutes(service.DurationInMinutes);
 
-        // 4. Validações Complexas de Negócio
         await ValidateBusinessRulesAsync(request, endTime, ct);
 
-        // 5. Cria a Entidade
         var appointment = new Appointment(
             professionalId: request.ProfessionalId,
             serviceId: request.ServiceId,
@@ -53,10 +49,9 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             clientName: request.ClientName,
             clientPhone: request.ClientPhone,
             startTime: request.StartTime,
-            endTime: endTime // Usamos o tempo calculado pelo servidor!
+            endTime: endTime 
         );
 
-        // 6. Persistência
         await _appointmentWriteRepository.Add(appointment, ct);
         await _unitOfWork.Commit();
 

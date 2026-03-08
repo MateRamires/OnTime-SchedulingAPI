@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
@@ -52,6 +53,11 @@ public static class DependencyInjenctionExtension
         services.AddScoped<ProfessionalScheduleRepository>();
         services.AddScoped<IProfessionalScheduleReadOnlyRepository>(sp => sp.GetRequiredService<ProfessionalScheduleRepository>());
         services.AddScoped<IProfessionalScheduleWriteOnlyRepository>(sp => sp.GetRequiredService<ProfessionalScheduleRepository>());
+
+        //Appointment Repository
+        services.AddScoped<AppointmentRepository>();
+        services.AddScoped<IAppointmentReadOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
+        services.AddScoped<IAppointmentWriteOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
