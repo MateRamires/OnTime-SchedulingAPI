@@ -35,7 +35,7 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
                 a.ProfessionalId == professionalId &&
                 a.Status != AppointmentStatus.Canceled &&
                 //!(newAppointmentEndTime <= a.StartTime || newAppointmentStartTime >= a.EndTime),
-                a.StartTime >= newAppointmentStartTime && a.StartTime < newAppointmentEndTime,
+                a.EndTime > newAppointmentStartTime && newAppointmentEndTime > a.StartTime,
             ct);
     }
 
