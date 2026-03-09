@@ -1,10 +1,14 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
@@ -15,6 +19,9 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
+    private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
     public RegisterAppointmentUseCase(
@@ -22,12 +29,18 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IServiceReadOnlyRepository serviceReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
+        IUserRepository userRepository,
+        ILocationReadOnlyRepository locationReadOnlyRepository,
+        ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
         _appointmentWriteRepository = appointmentWriteRepository;
         _appointmentReadRepository = appointmentReadRepository;
         _serviceReadRepository = serviceReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
+        _userRepository = userRepository;
+        _locationReadOnlyRepository = locationReadOnlyRepository;
+        _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
 
@@ -39,9 +52,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        var endTime = request.StartTime.AddMinutes(service.DurationInMinutes);
+        var startTimeUtc = request.StartTime.ToUniversalTime();
+        var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
-        await ValidateBusinessRulesAsync(request, endTime, ct);
+        await ValidateBusinessRulesAsync(request, startTimeUtc, endTime, ct);
 
         var appointment = new Appointment(
             professionalId: request.ProfessionalId,
@@ -49,7 +63,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             locationId: request.LocationId,
             clientName: request.ClientName,
             clientPhone: request.ClientPhone,
-            startTime: request.StartTime,
+            startTime: startTimeUtc,
             endTime: endTime 
         );
 
@@ -74,21 +88,43 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         }
     }
 
-    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request, DateTime calculatedEndTime, CancellationToken ct)
+    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request,DateTime startTimeUtc,DateTime calculatedEndTime, CancellationToken ct)
     {
+        var errors = new List<string>();
+
+        if (!_tenantProvider.CompanyId.HasValue)
+            errors.Add("The authenticated user does not have a valid tenant context.");
+
+        if (_tenantProvider.CompanyId.HasValue)
+        {
+            var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
+            if (professional is null)
+                errors.Add("Professional not found in this tenant.");
+            else if (professional.Role != UserRole.PROVIDER)
+                errors.Add("Only provider users can receive appointments.");
+        }
+
+        var locationExists = await _locationReadOnlyRepository.ExistsActiveLocationById(request.LocationId, ct);
+        if (!locationExists)
+            errors.Add("Location not found in this tenant.");
+
+
         // Regra A: O profissional realiza este serviço?
         var doesProfessionalPerformService = await _professionalServiceReadRepository
             .Exists(request.ProfessionalId, request.ServiceId, ct);
 
         if (!doesProfessionalPerformService)
-            throw new ErrorOnValidationException(["This professional does not provide the selected service."]);
+            errors.Add("This professional does not provide the selected service.");
 
         // Regra B: O horário está livre? (Evitar sobreposição)
         var isTimeSlotTaken = await _appointmentReadRepository
-            .HasOverlappingAppointment(request.ProfessionalId, request.StartTime, calculatedEndTime, ct);
+            .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct);
 
         if (isTimeSlotTaken)
-            throw new ErrorOnValidationException(["The selected time slot is no longer available."]);
+            errors.Add("The selected time slot is no longer available.");
+
+        if (errors.Count != 0)
+            throw new ErrorOnValidationException(errors);
 
         // NOTA DE ARQUITETURA: 
         // Em um cenário 100% completo, aqui também verificaríamos se o request.StartTime 
