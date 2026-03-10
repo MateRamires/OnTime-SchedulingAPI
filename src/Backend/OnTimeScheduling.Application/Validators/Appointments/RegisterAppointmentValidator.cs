@@ -22,5 +22,10 @@ public class RegisterAppointmentValidator : AbstractValidator<RequestRegisterApp
         RuleFor(a => a.StartTime)
             .GreaterThan(DateTime.UtcNow.AddMinutes(-1))
             .WithMessage("Appointments cannot be scheduled in the past.");
+
+        RuleFor(a => a.StartTime)
+            .Must(startTime => startTime.Kind == DateTimeKind.Utc)
+            .WithMessage("StartTime must be in UTC (ISO-8601 with 'Z').");
+
     }
 }

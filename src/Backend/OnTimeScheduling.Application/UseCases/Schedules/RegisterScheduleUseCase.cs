@@ -50,7 +50,7 @@ public class RegisterScheduleUseCase : IRegisterScheduleUseCase
         );
 
         await _writeRepository.Add(schedule, ct);
-        await _unitOfWork.Commit();
+        await _unitOfWork.Commit(ct);
 
         return new ResponseRegisterScheduleJson
         {

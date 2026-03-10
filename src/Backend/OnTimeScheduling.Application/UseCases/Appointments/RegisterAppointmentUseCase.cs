@@ -1,5 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
@@ -21,6 +22,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
+    private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -31,6 +33,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
+        IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -40,6 +43,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         _professionalServiceReadRepository = professionalServiceReadRepository;
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
+        _scheduleReadRepository = scheduleReadRepository;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -68,7 +72,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         );
 
         await _appointmentWriteRepository.Add(appointment, ct);
-        await _unitOfWork.Commit();
+        await _unitOfWork.Commit(ct);
 
         return new ResponseRegisterAppointmentJson
         {
@@ -123,12 +127,29 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         if (isTimeSlotTaken)
             errors.Add("The selected time slot is no longer available.");
 
+        var dayOfWeek = startTimeUtc.DayOfWeek;
+        var appointmentStart = startTimeUtc.TimeOfDay;
+        var appointmentEnd = calculatedEndTime.TimeOfDay;
+        var spansDifferentDays = calculatedEndTime.Date != startTimeUtc.Date;
+
+        if (spansDifferentDays)
+            errors.Add("Appointments cannot span across different days.");
+
+        var isInsideProfessionalSchedule = !spansDifferentDays
+            ? await _scheduleReadRepository.HasCoverageForAppointment(
+                request.ProfessionalId,
+                request.LocationId,
+                dayOfWeek,
+                appointmentStart,
+                appointmentEnd,
+                ct)
+            : false;
+
+        if (!spansDifferentDays && !isInsideProfessionalSchedule)
+            errors.Add("The selected time slot is outside the professional's regular schedule for this location.");
+
+
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
-
-        // NOTA DE ARQUITETURA: 
-        // Em um cenário 100% completo, aqui também verificaríamos se o request.StartTime 
-        // está dentro da "ProfessionalSchedule" (Grade Regular). Mas geralmente, delegamos 
-        // essa responsabilidade para a consulta de "Horários Disponíveis" que o Front-end chama antes de agendar.
     }
 }

@@ -9,7 +9,7 @@ namespace OnTimeScheduling.Api.Controllers;
 public class AppointmentsController : OnTimeSchedulingController
 {
     [HttpPost]
-    [Authorize] //TODO: decidir quem pode fazer isso
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(typeof(ResponseRegisterAppointmentJson), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

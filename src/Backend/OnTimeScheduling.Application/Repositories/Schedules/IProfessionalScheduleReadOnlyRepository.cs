@@ -8,4 +8,13 @@ public interface IProfessionalScheduleReadOnlyRepository
         TimeSpan startTime, 
         TimeSpan endTime, 
         CancellationToken ct = default);
+
+    Task<bool> HasCoverageForAppointment(
+        Guid userId,
+        Guid locationId,
+        DayOfWeek dayOfWeek,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        CancellationToken ct = default);
+
 }

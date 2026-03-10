@@ -33,4 +33,23 @@ public class ProfessionalScheduleRepository : IProfessionalScheduleWriteOnlyRepo
                 s.EndTime > startTime,
             ct);
     }
+
+    public async Task<bool> HasCoverageForAppointment(
+        Guid userId,
+        Guid locationId,
+        DayOfWeek dayOfWeek,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        CancellationToken ct = default)
+    {
+        return await _dbContext.ProfessionalSchedules
+            .AnyAsync(s =>
+                s.UserId == userId &&
+                s.LocationId == locationId &&
+                s.DayOfWeek == dayOfWeek &&
+                s.StartTime <= startTime &&
+                s.EndTime >= endTime,
+            ct);
+    }
+
 }
