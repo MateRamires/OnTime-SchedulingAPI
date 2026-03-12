@@ -8,7 +8,6 @@ namespace OnTimeScheduling.Api.Controllers;
 
 public class ProfessionalSchedulesController : OnTimeSchedulingController
 {
-    //TODO: Fully test
     [HttpPost]
     [Authorize(Roles = "COMPANY_ADMIN")]
     [ProducesResponseType(typeof(ResponseRegisterScheduleJson), StatusCodes.Status201Created)]
