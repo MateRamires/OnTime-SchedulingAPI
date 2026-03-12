@@ -17,5 +17,7 @@ public class RegisterLocationValidator : AbstractValidator<RequestRegisterLocati
             .NotEmpty().WithMessage("The address is required.")
             .MaximumLength(250).WithMessage("The address must have less than 250 characters.");
 
+        RuleFor(x => x.TimeZoneId)
+            .MaximumLength(100).WithMessage("The timezone must have less than 100 characters.");
     }
 }

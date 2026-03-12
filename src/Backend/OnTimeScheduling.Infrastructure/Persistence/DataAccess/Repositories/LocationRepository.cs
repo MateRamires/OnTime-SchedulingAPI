@@ -31,4 +31,13 @@ public class LocationRepository : ILocationWriteOnlyRepository, ILocationReadOnl
             .AnyAsync(l => l.Id == locationId && l.Status == RecordStatus.Active, ct);
     }
 
+    public async Task<string?> GetActiveLocationTimeZoneIdById(Guid locationId, CancellationToken ct = default)
+    {
+        return await _dbContext.Locations
+            .Where(l => l.Id == locationId && l.Status == RecordStatus.Active)
+            .Select(l => l.TimeZoneId)
+            .FirstOrDefaultAsync(ct);
+    }
+
+
 }

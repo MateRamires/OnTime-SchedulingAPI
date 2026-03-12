@@ -4,4 +4,5 @@ public interface ILocationReadOnlyRepository
 {
     Task<bool> ExistsActiveLocationWithName(string name, Guid companyId, CancellationToken ct);
     Task<bool> ExistsActiveLocationById(Guid locationId, CancellationToken ct = default);
+    Task<string?> GetActiveLocationTimeZoneIdById(Guid locationId, CancellationToken ct = default);
 }

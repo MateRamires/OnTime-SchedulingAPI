@@ -30,6 +30,12 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .IsRequired()
             .HasMaxLength(255);
 
+        builder.Property(x => x.TimeZoneId)
+            .HasColumnName("time_zone_id")
+            .IsRequired()
+            .HasMaxLength(100);
+
+
         builder.Property(x => x.Status)
             .HasColumnName("status")
             .HasConversion<int>()

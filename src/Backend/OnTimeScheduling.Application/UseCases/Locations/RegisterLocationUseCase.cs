@@ -67,6 +67,23 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
             
         }
 
+        if (!string.IsNullOrWhiteSpace(request.TimeZoneId))
+        {
+            try
+            {
+                TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneId.Trim());
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.TimeZoneId), "The provided timezone is invalid."));
+            }
+            catch (InvalidTimeZoneException)
+            {
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.TimeZoneId), "The provided timezone is invalid."));
+            }
+        }
+
+
         if (!result.IsValid)
         {
             var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();

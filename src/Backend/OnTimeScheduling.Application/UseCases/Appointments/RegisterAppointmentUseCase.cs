@@ -56,7 +56,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        var startTimeUtc = request.StartTime.ToUniversalTime();
+        var startTimeUtc = request.StartTime;
         var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
         await ValidateBusinessRulesAsync(request, startTimeUtc, endTime, ct);
@@ -108,8 +108,8 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
                 errors.Add("Only provider users can receive appointments.");
         }
 
-        var locationExists = await _locationReadOnlyRepository.ExistsActiveLocationById(request.LocationId, ct);
-        if (!locationExists)
+        var locationTimeZoneId = await _locationReadOnlyRepository.GetActiveLocationTimeZoneIdById(request.LocationId, ct);
+        if (locationTimeZoneId is null)
             errors.Add("Location not found in this tenant.");
 
 
@@ -127,26 +127,51 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         if (isTimeSlotTaken)
             errors.Add("The selected time slot is no longer available.");
 
-        var dayOfWeek = startTimeUtc.DayOfWeek;
-        var appointmentStart = startTimeUtc.TimeOfDay;
-        var appointmentEnd = calculatedEndTime.TimeOfDay;
-        var spansDifferentDays = calculatedEndTime.Date != startTimeUtc.Date;
+        if (locationTimeZoneId is not null)
+        {
+            TimeZoneInfo? locationTimeZone = null;
 
-        if (spansDifferentDays)
-            errors.Add("Appointments cannot span across different days.");
+            try
+            {
+                locationTimeZone = TimeZoneInfo.FindSystemTimeZoneById(locationTimeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                errors.Add("Location timezone is invalid.");
+            }
+            catch (InvalidTimeZoneException)
+            {
+                errors.Add("Location timezone is invalid.");
+            }
 
-        var isInsideProfessionalSchedule = !spansDifferentDays
-            ? await _scheduleReadRepository.HasCoverageForAppointment(
-                request.ProfessionalId,
-                request.LocationId,
-                dayOfWeek,
-                appointmentStart,
-                appointmentEnd,
-                ct)
-            : false;
+            if (locationTimeZone is not null)
+            {
+                var localStartTime = TimeZoneInfo.ConvertTimeFromUtc(startTimeUtc, locationTimeZone);
+                var localEndTime = TimeZoneInfo.ConvertTimeFromUtc(calculatedEndTime, locationTimeZone);
 
-        if (!spansDifferentDays && !isInsideProfessionalSchedule)
-            errors.Add("The selected time slot is outside the professional's regular schedule for this location.");
+                var localDayOfWeek = localStartTime.DayOfWeek;
+                var localAppointmentStart = localStartTime.TimeOfDay;
+                var localAppointmentEnd = localEndTime.TimeOfDay;
+                var spansDifferentLocalDays = localEndTime.Date != localStartTime.Date;
+
+                if (spansDifferentLocalDays)
+                    errors.Add("Appointments cannot span across different days.");
+
+                var isInsideProfessionalSchedule = !spansDifferentLocalDays
+                    ? await _scheduleReadRepository.HasCoverageForAppointment(
+                        request.ProfessionalId,
+                        request.LocationId,
+                        localDayOfWeek,
+                        localAppointmentStart,
+                        localAppointmentEnd,
+                        ct)
+                    : false;
+
+                if (!spansDifferentLocalDays && !isInsideProfessionalSchedule)
+                    errors.Add("The selected time slot is outside the professional's regular schedule for this location.");
+            }
+        }
+
 
 
         if (errors.Count != 0)
