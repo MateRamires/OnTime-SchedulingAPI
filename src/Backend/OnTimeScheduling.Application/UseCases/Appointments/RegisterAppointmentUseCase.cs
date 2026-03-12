@@ -152,20 +152,22 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
                 var spansDifferentLocalDays = localEndTime.Date != localStartTime.Date;
 
                 if (spansDifferentLocalDays)
+                {
                     errors.Add("Appointments cannot span across different days.");
-
-                var isInsideProfessionalSchedule = !spansDifferentLocalDays
-                    ? await _scheduleReadRepository.HasCoverageForAppointment(
+                }
+                else
+                {
+                    var isInsideProfessionalSchedule = await _scheduleReadRepository.HasCoverageForAppointment(
                         request.ProfessionalId,
                         request.LocationId,
                         localDayOfWeek,
                         localAppointmentStart,
                         localAppointmentEnd,
-                        ct)
-                    : false;
+                        ct);
 
-                if (!spansDifferentLocalDays && !isInsideProfessionalSchedule)
-                    errors.Add("The selected time slot is outside the professional's regular schedule for this location.");
+                    if (!isInsideProfessionalSchedule)
+                        errors.Add("The selected time slot is outside the professional's regular schedule for this location.");
+                }
             }
         }
 
