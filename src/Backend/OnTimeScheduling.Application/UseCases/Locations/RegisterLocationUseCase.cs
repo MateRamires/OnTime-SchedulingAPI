@@ -36,7 +36,8 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         var location = new Location(
             companyId: companyId,
             name: request.Name,
-            address: request.Address
+            address: request.Address,
+            timeZoneId: request.TimeZoneId
         );
 
         await _repository.Add(location, ct);
