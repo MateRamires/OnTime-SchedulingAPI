@@ -112,15 +112,12 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         if (locationTimeZoneId is null)
             errors.Add("Location not found in this tenant.");
 
-
-        // Regra A: O profissional realiza este serviço?
         var doesProfessionalPerformService = await _professionalServiceReadRepository
             .Exists(request.ProfessionalId, request.ServiceId, ct);
 
         if (!doesProfessionalPerformService)
             errors.Add("This professional does not provide the selected service.");
 
-        // Regra B: O horário está livre? (Evitar sobreposição)
         var isTimeSlotTaken = await _appointmentReadRepository
             .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct);
 
