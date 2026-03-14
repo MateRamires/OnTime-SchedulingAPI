@@ -20,7 +20,7 @@ public class RegisterAppointmentValidator : AbstractValidator<RequestRegisterApp
             .MaximumLength(20).WithMessage("Client Phone must be a maximum of 20 characters.");
 
         RuleFor(a => a.StartTime)
-            .GreaterThan(DateTime.UtcNow.AddMinutes(-1))
+            .Must(startTime => startTime > DateTime.UtcNow)
             .WithMessage("Appointments cannot be scheduled in the past.");
 
         RuleFor(a => a.StartTime)

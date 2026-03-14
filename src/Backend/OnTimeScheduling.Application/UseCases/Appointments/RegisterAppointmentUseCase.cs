@@ -56,6 +56,9 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
+        var sanitizedClientName = request.ClientName.Trim();
+        var sanitizedClientPhone = request.ClientPhone.Trim();
+
         var startTimeUtc = request.StartTime;
         var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
@@ -65,8 +68,8 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             professionalId: request.ProfessionalId,
             serviceId: request.ServiceId,
             locationId: request.LocationId,
-            clientName: request.ClientName,
-            clientPhone: request.ClientPhone,
+            clientName: sanitizedClientName,
+            clientPhone: sanitizedClientPhone,
             startTime: startTimeUtc,
             endTime: endTime 
         );
