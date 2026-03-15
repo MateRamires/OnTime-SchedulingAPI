@@ -1,11 +1,14 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Domain.Entities.Appointments;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;
+using OnTimeScheduling.Domain.Entities.Schedules;
 using OnTimeScheduling.Domain.Entities.Services;
 using OnTimeScheduling.Domain.Entities.User;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 using System.Reflection;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
@@ -14,10 +17,12 @@ public class AppDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
     public DbSet<User> Users => Set<User>();
-    public DbSet<Company> Companies { get; set; }
-    public DbSet<Location> Locations { get; set; }
-    public DbSet<Service> Services { get; set; }
-    public DbSet<ProfessionalService> ProfessionalServices { get; set; }
+    public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<ProfessionalService> ProfessionalServices => Set<ProfessionalService>();
+    public DbSet<ProfessionalSchedule> ProfessionalSchedules => Set<ProfessionalSchedule>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {
@@ -58,6 +63,12 @@ public class AppDbContext : DbContext
                 if (currentCompanyId.HasValue)
                 {
                     entry.Entity.CompanyId = currentCompanyId.Value;
+                }
+                else
+                {
+                    throw new DomainRuleException(
+                        $"Multi-tenant violation: The entity '{entry.Entity.GetType().Name}' " +
+                        "requires a valid CompanyId, but the current tenant context is null or empty.");
                 }
             }
         }

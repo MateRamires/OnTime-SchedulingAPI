@@ -13,6 +13,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id");
 
@@ -55,5 +58,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at_utc")
             .IsRequired();
+
+        builder.HasIndex(x => x.CompanyId);
+        builder.HasIndex(x => new { x.CompanyId, x.Role });
+        builder.HasIndex(x => new { x.CompanyId, x.Status });
     }
 }

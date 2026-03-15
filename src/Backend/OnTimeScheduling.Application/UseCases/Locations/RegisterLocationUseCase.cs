@@ -5,6 +5,7 @@ using OnTimeScheduling.Application.Validators.Locations;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Entities.Locations;
+using OnTimeScheduling.Domain.Extensions;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Locations;
@@ -24,6 +25,9 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
     }
     public async Task<ResponseRegisterLocationJson> ExecuteAsync(RequestRegisterLocationJson request, CancellationToken ct)
     {
+        request.Name = request.Name.FormatName();
+        request.Address = request.Address?.Trim() ?? string.Empty;
+
         await Validate(request, ct);
 
         var companyId = _tenantProvider.CompanyId
@@ -32,7 +36,8 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         var location = new Location(
             companyId: companyId,
             name: request.Name,
-            address: request.Address
+            address: request.Address,
+            timeZoneId: request.TimeZoneId
         );
 
         await _repository.Add(location, ct);
@@ -52,14 +57,33 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
 
         var currentCompanyId = _tenantProvider.CompanyId;
 
+        if (!currentCompanyId.HasValue)
+            result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The authenticated user does not have a valid tenant context."));
+
         if (currentCompanyId.HasValue)
         {
             var nameExists = await _readRepository.ExistsActiveLocationWithName(request.Name, currentCompanyId.Value, ct);
             if (nameExists)
-            {
                 result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "A location with this name already exists in your company."));
+            
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.TimeZoneId))
+        {
+            try
+            {
+                TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneId.Trim());
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.TimeZoneId), "The provided timezone is invalid."));
+            }
+            catch (InvalidTimeZoneException)
+            {
+                result.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.TimeZoneId), "The provided timezone is invalid."));
             }
         }
+
 
         if (!result.IsValid)
         {

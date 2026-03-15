@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
@@ -41,6 +43,21 @@ public static class DependencyInjenctionExtension
         services.AddScoped<ServiceRepository>();
         services.AddScoped<IServiceWriteOnlyRepository>(sp => sp.GetRequiredService<ServiceRepository>());
         services.AddScoped<IServiceReadOnlyRepository>(sp => sp.GetRequiredService<ServiceRepository>());
+
+        //Link Professional Service Repository
+        services.AddScoped<ProfessionalServiceRepository>();
+        services.AddScoped<IProfessionalServiceWriteOnlyRepository>(sp => sp.GetRequiredService<ProfessionalServiceRepository>());
+        services.AddScoped<IProfessionalServiceReadOnlyRepository>(sp => sp.GetRequiredService<ProfessionalServiceRepository>());
+
+        //Professional Schedule Repository
+        services.AddScoped<ProfessionalScheduleRepository>();
+        services.AddScoped<IProfessionalScheduleReadOnlyRepository>(sp => sp.GetRequiredService<ProfessionalScheduleRepository>());
+        services.AddScoped<IProfessionalScheduleWriteOnlyRepository>(sp => sp.GetRequiredService<ProfessionalScheduleRepository>());
+
+        //Appointment Repository
+        services.AddScoped<AppointmentRepository>();
+        services.AddScoped<IAppointmentReadOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
+        services.AddScoped<IAppointmentWriteOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

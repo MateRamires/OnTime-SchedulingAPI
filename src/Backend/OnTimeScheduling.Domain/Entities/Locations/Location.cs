@@ -6,12 +6,14 @@ namespace OnTimeScheduling.Domain.Entities.Locations;
 
 public class Location : TenantEntity
 {
+    public const string DefaultTimeZoneId = "America/Sao_Paulo";
     public string Name { get; private set; } = null!;
     public string Address { get; private set; } = null!;
+    public string TimeZoneId { get; private set; } = DefaultTimeZoneId;
     public RecordStatus Status { get; private set; }
     private Location() { }
 
-    public Location(Guid companyId, string name, string address)
+    public Location(Guid companyId, string name, string address, string? timeZoneId = null)
     {
         if (companyId == Guid.Empty)
             throw new DomainRuleException("A valid CompanyId is required for a Location.");
@@ -19,6 +21,7 @@ public class Location : TenantEntity
         CompanyId = companyId;
         SetName(name);
         SetAddress(address);
+        SetTimeZoneId(timeZoneId);
         Status = RecordStatus.Active;
     }
 
@@ -28,7 +31,6 @@ public class Location : TenantEntity
             throw new DomainRuleException("Location name is required.");
 
         Name = name;
-        Touch();
     }
 
     public void SetAddress(string address)
@@ -37,18 +39,29 @@ public class Location : TenantEntity
             throw new DomainRuleException("Address is required.");
 
         Address = address;
-        Touch();
     }
+
+    public void SetTimeZoneId(string? timeZoneId)
+    {
+        var normalizedTimeZoneId = string.IsNullOrWhiteSpace(timeZoneId)
+            ? DefaultTimeZoneId
+            : timeZoneId.Trim();
+
+        if (normalizedTimeZoneId.Length > 100)
+            throw new DomainRuleException("Time zone ID must have less than 100 characters.");
+
+        TimeZoneId = normalizedTimeZoneId;
+    }
+
+
 
     public void Inactivate()
     {
         Status = RecordStatus.Inactive;
-        Touch();
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
-        Touch();
     }
 }

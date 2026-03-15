@@ -14,6 +14,8 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
         _dbContext = dbContext;
     }
 
+    //TODO: checar necessidade de colocar AsNoTracking em algum dos metodos
+
     public async Task Add(Service service, CancellationToken ct = default)
     {
         await _dbContext.Services.AddAsync(service, ct);
@@ -23,5 +25,17 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
     {
         return await _dbContext.Services
             .AnyAsync(s => s.Name.ToLower() == name.ToLower() && s.Status == RecordStatus.Active, ct);
+    }
+
+    public async Task<bool> ExistsActiveById(Guid serviceId, CancellationToken ct = default)
+    {
+        return await _dbContext.Services
+            .AnyAsync(s => s.Id == serviceId && s.Status == RecordStatus.Active, ct);
+    }
+
+    public async Task<Service?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _dbContext.Services
+            .FirstOrDefaultAsync(s => s.Id == id && s.Status == RecordStatus.Active, ct);
     }
 }

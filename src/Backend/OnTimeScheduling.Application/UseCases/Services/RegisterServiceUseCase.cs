@@ -8,7 +8,7 @@ using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Services;
 
-public class RegisterServiceUseCase
+public class RegisterServiceUseCase : IRegisterServiceUseCase
 {
     private readonly IServiceWriteOnlyRepository _serviceWriteRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
@@ -27,7 +27,8 @@ public class RegisterServiceUseCase
     public async Task<ResponseRegisterServiceJson> ExecuteAsync(RequestRegisterServiceJson request, CancellationToken ct = default)
     {
         //TODO: request can have a professionalIds so the user can register the service + a bunch of users that can do said service
-        request.Name = request.Name.Trim();
+        request.Name = request.Name?.Trim() ?? string.Empty;
+        request.Description = request.Description?.Trim();
 
         if (!string.IsNullOrWhiteSpace(request.Description))
             request.Description = request.Description.Trim();
@@ -53,6 +54,7 @@ public class RegisterServiceUseCase
 
     private async Task Validate(RequestRegisterServiceJson request, CancellationToken ct = default)
     {
+        //TODO: Make the Validator safer for numbers (price + duration). Add a new error if the user sends a invalid caracter (letter or special caracter) 
         var validator = new RegisterServiceValidator();
         var result = validator.Validate(request);
 

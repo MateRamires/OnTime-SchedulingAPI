@@ -13,6 +13,9 @@ public class ProfessionalServiceConfiguration : IEntityTypeConfiguration<Profess
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id")
             .IsRequired();
@@ -43,6 +46,7 @@ public class ProfessionalServiceConfiguration : IEntityTypeConfiguration<Profess
         builder.Property(x => x.CreatedAt).HasColumnName("created_at_utc").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at_utc").IsRequired();
 
-        builder.HasIndex(x => new { x.UserId, x.ServiceId, x.CompanyId }).IsUnique();
+        builder.HasIndex(x => new { x.CompanyId, x.UserId, x.ServiceId }).IsUnique(); 
+        builder.HasIndex(x => new { x.CompanyId, x.ServiceId });
     }
 }

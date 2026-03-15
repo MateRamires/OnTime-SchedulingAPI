@@ -9,9 +9,23 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 {
     public void Configure(EntityTypeBuilder<Service> builder)
     {
-        builder.ToTable("services");
+        builder.ToTable("services", tb =>
+        {
+            tb.HasCheckConstraint(
+                "ck_services_duration_positive",
+                "duration_in_minutes > 0"
+            );
+
+            tb.HasCheckConstraint(
+                "ck_services_price_non_negative",
+                "price >= 0"
+            );
+        });
 
         builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
 
         builder.Property(x => x.CompanyId)
             .HasColumnName("company_id")
@@ -53,5 +67,8 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
             .WithMany()
             .HasForeignKey(x => x.CompanyId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.CompanyId, x.Status });
+        builder.HasIndex(x => new { x.CompanyId, x.Name }).IsUnique();
     }
 }

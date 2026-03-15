@@ -12,6 +12,9 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
         builder.Property(x => x.SocialReason)
             .HasColumnName("social_reason")
             .HasMaxLength(200)
