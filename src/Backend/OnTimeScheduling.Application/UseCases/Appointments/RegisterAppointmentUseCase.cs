@@ -50,7 +50,6 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 
     public async Task<ResponseRegisterAppointmentJson> ExecuteAsync(RequestRegisterAppointmentJson request, CancellationToken ct = default)
     {
-        //TODO: verificar necessidade de separar Validates
         ValidateBasicFields(request);
 
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
