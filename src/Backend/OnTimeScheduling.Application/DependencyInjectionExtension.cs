@@ -21,6 +21,8 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRegisterServiceUseCase, RegisterServiceUseCase>();
         services.AddScoped<ILinkProfessionalServiceUseCase, LinkProfessionalServiceUseCase>();
         services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
+
         services.AddScoped<IRegisterAppointmentUseCase, RegisterAppointmentUseCase>();
+        services.AddScoped<IGetAvailableTimeSlotsUseCase, GetAvailableTimeSlotsUseCase>();
     }
 }
