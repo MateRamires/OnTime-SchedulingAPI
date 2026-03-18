@@ -52,4 +52,19 @@ public class ProfessionalScheduleRepository : IProfessionalScheduleWriteOnlyRepo
             ct);
     }
 
+    public async Task<List<ProfessionalSchedule>> GetSchedulesByDayAsync(
+        Guid userId,
+        Guid locationId,
+        DayOfWeek dayOfWeek,
+        CancellationToken ct = default)
+    {
+        return await _dbContext.ProfessionalSchedules
+            .Where(s =>
+                s.UserId == userId &&
+                s.LocationId == locationId &&
+                s.DayOfWeek == dayOfWeek)
+            .OrderBy(s => s.StartTime) 
+            .ToListAsync(ct);
+    }
+
 }

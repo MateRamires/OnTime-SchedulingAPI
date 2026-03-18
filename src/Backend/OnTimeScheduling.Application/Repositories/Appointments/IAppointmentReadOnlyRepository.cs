@@ -14,4 +14,10 @@ public interface IAppointmentReadOnlyRepository
         DateTime startPeriod,
         DateTime endPeriod,
         CancellationToken ct = default);
+    Task<List<Appointment>> GetAppointmentsByDateRangeAsync(
+        Guid professionalId,
+        Guid locationId,
+        DateTime startUtc,
+        DateTime endUtc,
+        CancellationToken ct = default);
 }

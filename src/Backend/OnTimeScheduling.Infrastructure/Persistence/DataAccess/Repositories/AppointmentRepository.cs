@@ -54,4 +54,22 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
             .OrderBy(a => a.StartTime)
             .ToListAsync(ct);
     }
+
+    public async Task<List<Appointment>> GetAppointmentsByDateRangeAsync(
+        Guid professionalId,
+        Guid locationId,
+        DateTime startUtc,
+        DateTime endUtc,
+        CancellationToken ct = default)
+    {
+        return await _dbContext.Appointments
+            .Where(a =>
+                a.ProfessionalId == professionalId &&
+                a.LocationId == locationId &&
+                a.Status != AppointmentStatus.Canceled && 
+                a.StartTime < endUtc &&
+                a.EndTime > startUtc)
+            .OrderBy(a => a.StartTime)
+            .ToListAsync(ct);
+    }
 }
