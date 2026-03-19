@@ -22,4 +22,30 @@ public class AppointmentsController : OnTimeSchedulingController
 
         return Created(string.Empty, response);
     }
+
+    [HttpGet("available-slots")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponseAvailableTimeSlotsJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAvailableTimeSlots(
+        [FromServices] IGetAvailableTimeSlotsUseCase useCase,
+        [FromQuery] Guid professionalId,
+        [FromQuery] Guid locationId,
+        [FromQuery] Guid serviceId,
+        [FromQuery] DateTime targetDate,
+        CancellationToken ct)
+    {
+        var request = new RequestGetAvailableTimeSlotsJson
+        {
+            ProfessionalId = professionalId,
+            LocationId = locationId,
+            ServiceId = serviceId,
+            TargetDate = targetDate
+        };
+
+        var response = await useCase.ExecuteAsync(request, ct);
+
+        return Ok(response);
+    }
 }

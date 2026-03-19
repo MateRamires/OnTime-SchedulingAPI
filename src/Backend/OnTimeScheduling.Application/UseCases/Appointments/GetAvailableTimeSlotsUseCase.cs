@@ -30,10 +30,8 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
 
     public async Task<ResponseAvailableTimeSlotsJson> ExecuteAsync(RequestGetAvailableTimeSlotsJson request, CancellationToken ct = default)
     {
-        // 1. Validar a Request Básica
         ValidateRequest(request);
 
-        // 2. Buscar informações essenciais (Serviço e Fuso Horário do Local)
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
@@ -42,14 +40,69 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
 
         var timeZone = GetTimeZoneInfo(locationTimeZoneId);
 
-        // 3. O Algoritmo de Disponibilidade (A ser implementado na Parte 2)
-        // Aqui precisaremos:
-        // a) Pegar a TargetDate do request (que pode vir em UTC) e converter para a Data Local do Local de Atendimento.
-        // b) Buscar os "ProfessionalSchedules" desse dia da semana (pode haver mais de um turno no dia, ex: 08-12 e 13-18).
-        // c) Buscar os "Appointments" que caem nessa data local.
-        // d) Interpolar os turnos com os agendamentos e fatiar de acordo com `service.DurationInMinutes`.
+        // 1. Entender qual "Dia" o cliente quer, na perspectiva do Fuso Horário do Local
+        var localTargetDate = TimeZoneInfo.ConvertTimeFromUtc(request.TargetDate, timeZone).Date;
+        var dayOfWeek = localTargetDate.DayOfWeek;
 
+        // 2. Buscar as Grades de Trabalho (Schedules) para este dia da semana
+        var schedules = await _scheduleReadRepository.GetSchedulesByDayAsync(
+            request.ProfessionalId, request.LocationId, dayOfWeek, ct);
+
+        // Se não trabalha nesse dia, retorna lista vazia na hora.
+        if (schedules.Count == 0)
+            return new ResponseAvailableTimeSlotsJson { AvailableSlotsUtc = [] };
+
+        // 3. Determinar o Início e o Fim do Dia em UTC para buscar os agendamentos no banco
+        var localStartOfDay = localTargetDate;
+        var localEndOfDay = localTargetDate.AddDays(1);
+
+        var utcStartOfDay = TimeZoneInfo.ConvertTimeToUtc(localStartOfDay, timeZone);
+        var utcEndOfDay = TimeZoneInfo.ConvertTimeToUtc(localEndOfDay, timeZone);
+
+        // 4. Buscar todos os agendamentos ocupados neste dia
+        var appointments = await _appointmentReadRepository.GetAppointmentsByDateRangeAsync(
+            request.ProfessionalId, request.LocationId, utcStartOfDay, utcEndOfDay, ct);
+
+        // 5. O ALGORITMO: Fatiar a Grade e verificar disponibilidade
         var availableSlotsUtc = new List<DateTime>();
+        var serviceDuration = TimeSpan.FromMinutes(service.DurationInMinutes);
+        var nowUtc = DateTime.UtcNow;
+
+        foreach (var schedule in schedules)
+        {
+            var currentSlotLocalTime = schedule.StartTime;
+            var scheduleEndLocalTime = schedule.EndTime;
+
+            // Continua fatiando enquanto o serviço couber dentro do turno
+            while (currentSlotLocalTime.Add(serviceDuration) <= scheduleEndLocalTime)
+            {
+                // Monta o DateTime exato do Slot no fuso horário local
+                var slotLocalStartDateTime = localTargetDate.Add(currentSlotLocalTime);
+                var slotLocalEndDateTime = slotLocalStartDateTime.Add(serviceDuration);
+
+                // Converte para UTC para fazer as comparações
+                var slotUtcStart = TimeZoneInfo.ConvertTimeToUtc(slotLocalStartDateTime, timeZone);
+                var slotUtcEnd = TimeZoneInfo.ConvertTimeToUtc(slotLocalEndDateTime, timeZone);
+
+                // REGRA 1: O horário já passou? (Para agendamentos no mesmo dia)
+                if (slotUtcStart > nowUtc)
+                {
+                    // REGRA 2: Esse slot bate em algum agendamento existente?
+                    // Lógica de sobreposição: (Início Slot < Fim Agendamento) E (Fim Slot > Início Agendamento)
+                    var hasOverlap = appointments.Any(a =>
+                        slotUtcStart < a.EndTime &&
+                        slotUtcEnd > a.StartTime);
+
+                    if (!hasOverlap)
+                    {
+                        availableSlotsUtc.Add(slotUtcStart);
+                    }
+                }
+
+                // Pula para o próximo horário (o "Passo" é a própria duração do serviço)
+                currentSlotLocalTime = currentSlotLocalTime.Add(serviceDuration);
+            }
+        }
 
         return new ResponseAvailableTimeSlotsJson
         {
