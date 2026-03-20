@@ -6,5 +6,5 @@ public class RequestGetAvailableTimeSlotsJson
     public Guid LocationId { get; set; }
     public Guid ServiceId { get; set; }
 
-    public DateTime TargetDate { get; set; }
+    public DateOnly TargetDate { get; set; }
 }

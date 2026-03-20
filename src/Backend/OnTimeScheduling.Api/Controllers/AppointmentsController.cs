@@ -33,7 +33,7 @@ public class AppointmentsController : OnTimeSchedulingController
         [FromQuery] Guid professionalId,
         [FromQuery] Guid locationId,
         [FromQuery] Guid serviceId,
-        [FromQuery] DateTime targetDate,
+        [FromQuery] DateOnly targetDate,
         CancellationToken ct)
     {
         var request = new RequestGetAvailableTimeSlotsJson
