@@ -2,9 +2,12 @@
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
+using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
@@ -13,36 +16,75 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
 {
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
+    private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly ITenantProvider _tenantProvider;
+
 
     public GetAvailableTimeSlotsUseCase(
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
         IServiceReadOnlyRepository serviceReadRepository,
-        ILocationReadOnlyRepository locationReadOnlyRepository)
+        IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
+        ILocationReadOnlyRepository locationReadOnlyRepository,
+        IUserRepository userRepository,
+        ITenantProvider tenantProvider)
     {
         _appointmentReadRepository = appointmentReadRepository;
         _scheduleReadRepository = scheduleReadRepository;
         _serviceReadRepository = serviceReadRepository;
+        _professionalServiceReadRepository = professionalServiceReadRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
+        _userRepository = userRepository;
+        _tenantProvider = tenantProvider;
+
     }
 
     public async Task<ResponseAvailableTimeSlotsJson> ExecuteAsync(RequestGetAvailableTimeSlotsJson request, CancellationToken ct = default)
     {
         ValidateRequest(request);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+        var errors = new List<string>();
 
-        var locationTimeZoneId = await _locationReadOnlyRepository.GetActiveLocationTimeZoneIdById(request.LocationId, ct)
-            ?? throw new NotFoundException("Location not found.");
+        if (!_tenantProvider.CompanyId.HasValue)
+            errors.Add("The authenticated user does not have a valid tenant context.");
 
-        var timeZone = GetTimeZoneInfo(locationTimeZoneId);
+        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
+        if (service is null)
+            errors.Add("Service not found.");
 
-        // 1. Entender qual "Dia" o cliente quer, na perspectiva do Fuso Horário do Local
-        var localTargetDate = TimeZoneInfo.ConvertTimeFromUtc(request.TargetDate, timeZone).Date;
-        var dayOfWeek = localTargetDate.DayOfWeek;
+        var locationTimeZoneId = await _locationReadOnlyRepository.GetActiveLocationTimeZoneIdById(request.LocationId, ct);
+        if (locationTimeZoneId is null)
+            errors.Add("Location not found in this tenant.");
+
+        if (_tenantProvider.CompanyId.HasValue)
+        {
+            var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
+            if (professional is null)
+                errors.Add("Professional not found in this tenant.");
+            else if (professional.Role != UserRole.PROVIDER)
+                errors.Add("Only provider users can receive appointments.");
+        }
+
+        var doesProfessionalPerformService = await _professionalServiceReadRepository.Exists(request.ProfessionalId, request.ServiceId, ct);
+        if (!doesProfessionalPerformService)
+            errors.Add("This professional does not provide the selected service.");
+
+        if (errors.Count != 0)
+            throw new ErrorOnValidationException(errors);
+
+        var timeZone = GetTimeZoneInfo(locationTimeZoneId!);
+        var localTargetDate = request.TargetDate;
+        var currentLocalDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+
+        if (localTargetDate < currentLocalDate)
+            throw new ErrorOnValidationException(["Cannot search for available slots in the past."]);
+
+        var localStartOfDay = localTargetDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var localEndOfDay = localTargetDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var dayOfWeek = localStartOfDay.DayOfWeek;
 
         // 2. Buscar as Grades de Trabalho (Schedules) para este dia da semana
         var schedules = await _scheduleReadRepository.GetSchedulesByDayAsync(
@@ -53,19 +95,16 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             return new ResponseAvailableTimeSlotsJson { AvailableSlotsUtc = [] };
 
         // 3. Determinar o Início e o Fim do Dia em UTC para buscar os agendamentos no banco
-        var localStartOfDay = localTargetDate;
-        var localEndOfDay = localTargetDate.AddDays(1);
-
-        var utcStartOfDay = TimeZoneInfo.ConvertTimeToUtc(localStartOfDay, timeZone);
-        var utcEndOfDay = TimeZoneInfo.ConvertTimeToUtc(localEndOfDay, timeZone);
+        var utcStartOfDay = ConvertLocalToUtc(localStartOfDay, timeZone);
+        var utcEndOfDay = ConvertLocalToUtc(localEndOfDay, timeZone);
 
         // 4. Buscar todos os agendamentos ocupados neste dia
         var appointments = await _appointmentReadRepository.GetAppointmentsByDateRangeAsync(
-            request.ProfessionalId, request.LocationId, utcStartOfDay, utcEndOfDay, ct);
+            request.ProfessionalId, utcStartOfDay, utcEndOfDay, ct);
 
         // 5. O ALGORITMO: Fatiar a Grade e verificar disponibilidade
-        var availableSlotsUtc = new List<DateTime>();
-        var serviceDuration = TimeSpan.FromMinutes(service.DurationInMinutes);
+        var availableSlotsUtc = new HashSet<DateTime>();
+        var serviceDuration = TimeSpan.FromMinutes(service!.DurationInMinutes);
         var nowUtc = DateTime.UtcNow;
 
         foreach (var schedule in schedules)
@@ -77,12 +116,17 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             while (currentSlotLocalTime.Add(serviceDuration) <= scheduleEndLocalTime)
             {
                 // Monta o DateTime exato do Slot no fuso horário local
-                var slotLocalStartDateTime = localTargetDate.Add(currentSlotLocalTime);
+                var slotLocalStartDateTime = localTargetDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified)
+                    .Add(currentSlotLocalTime);
                 var slotLocalEndDateTime = slotLocalStartDateTime.Add(serviceDuration);
 
                 // Converte para UTC para fazer as comparações
-                var slotUtcStart = TimeZoneInfo.ConvertTimeToUtc(slotLocalStartDateTime, timeZone);
-                var slotUtcEnd = TimeZoneInfo.ConvertTimeToUtc(slotLocalEndDateTime, timeZone);
+                if (!TryConvertLocalToUtc(slotLocalStartDateTime, timeZone, out var slotUtcStart) ||
+                    !TryConvertLocalToUtc(slotLocalEndDateTime, timeZone, out var slotUtcEnd))
+                {
+                    currentSlotLocalTime = currentSlotLocalTime.Add(serviceDuration);
+                    continue;
+                }
 
                 // REGRA 1: O horário já passou? (Para agendamentos no mesmo dia)
                 if (slotUtcStart > nowUtc)
@@ -106,7 +150,7 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
 
         return new ResponseAvailableTimeSlotsJson
         {
-            AvailableSlotsUtc = availableSlotsUtc
+            AvailableSlotsUtc = availableSlotsUtc.OrderBy(slot => slot).ToList()
         };
     }
 
@@ -133,4 +177,24 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             throw new ErrorOnValidationException(["Invalid location time zone configuration."]);
         }
     }
+
+    private static DateTime ConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone)
+    {
+        if (timeZone.IsInvalidTime(localDateTime))
+            throw new ErrorOnValidationException(["The selected date contains an invalid local time for the location timezone."]);
+
+        return TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
+    }
+
+    private static bool TryConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone, out DateTime utcDateTime)
+    {
+        utcDateTime = default;
+
+        if (timeZone.IsInvalidTime(localDateTime))
+            return false;
+
+        utcDateTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
+        return true;
+    }
+
 }

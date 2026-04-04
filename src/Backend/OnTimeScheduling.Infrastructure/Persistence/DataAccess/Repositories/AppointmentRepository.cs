@@ -34,7 +34,6 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
             .AnyAsync(a =>
                 a.ProfessionalId == professionalId &&
                 a.Status != AppointmentStatus.Canceled &&
-                //!(newAppointmentEndTime <= a.StartTime || newAppointmentStartTime >= a.EndTime),
                 a.EndTime > newAppointmentStartTime && newAppointmentEndTime > a.StartTime,
             ct);
     }
@@ -57,15 +56,14 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
 
     public async Task<List<Appointment>> GetAppointmentsByDateRangeAsync(
         Guid professionalId,
-        Guid locationId,
         DateTime startUtc,
         DateTime endUtc,
         CancellationToken ct = default)
     {
         return await _dbContext.Appointments
+            .AsNoTracking()
             .Where(a =>
                 a.ProfessionalId == professionalId &&
-                a.LocationId == locationId &&
                 a.Status != AppointmentStatus.Canceled && 
                 a.StartTime < endUtc &&
                 a.EndTime > startUtc)
