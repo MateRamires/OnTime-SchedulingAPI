@@ -95,8 +95,8 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             return new ResponseAvailableTimeSlotsJson { AvailableSlotsUtc = [] };
 
         // 3. Determinar o Início e o Fim do Dia em UTC para buscar os agendamentos no banco
-        var utcStartOfDay = ConvertLocalToUtc(localStartOfDay, timeZone);
-        var utcEndOfDay = ConvertLocalToUtc(localEndOfDay, timeZone);
+        var utcStartOfDay = ConvertLocalBoundaryToUtc(localStartOfDay, timeZone, isStartBoundary: true);
+        var utcEndOfDay = ConvertLocalBoundaryToUtc(localEndOfDay, timeZone, isStartBoundary: false);
 
         // 4. Buscar todos os agendamentos ocupados neste dia
         var appointments = await _appointmentReadRepository.GetAppointmentsByDateRangeAsync(
@@ -178,10 +178,22 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         }
     }
 
-    private static DateTime ConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone)
+    private static DateTime ConvertLocalBoundaryToUtc(DateTime localDateTime, TimeZoneInfo timeZone, bool isStartBoundary)
     {
         if (timeZone.IsInvalidTime(localDateTime))
             throw new ErrorOnValidationException(["The selected date contains an invalid local time for the location timezone."]);
+
+
+        if (timeZone.IsAmbiguousTime(localDateTime))
+        {
+            var offsets = timeZone.GetAmbiguousTimeOffsets(localDateTime);
+            var utcCandidates = offsets
+                .Select(offset => DateTime.SpecifyKind(localDateTime - offset, DateTimeKind.Utc))
+                .ToList();
+
+            return isStartBoundary ? utcCandidates.Min() : utcCandidates.Max();
+        }
+
 
         return TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
     }
@@ -191,6 +203,9 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         utcDateTime = default;
 
         if (timeZone.IsInvalidTime(localDateTime))
+            return false;
+
+        if (timeZone.IsAmbiguousTime(localDateTime))
             return false;
 
         utcDateTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
