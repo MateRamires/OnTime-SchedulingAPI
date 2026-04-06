@@ -120,17 +120,14 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
                     .Add(currentSlotLocalTime);
                 var slotLocalEndDateTime = slotLocalStartDateTime.Add(serviceDuration);
 
-                // Converte para UTC para fazer as comparações
-                if (!TryConvertLocalToUtc(slotLocalStartDateTime, timeZone, out var slotUtcStart) ||
-                    !TryConvertLocalToUtc(slotLocalEndDateTime, timeZone, out var slotUtcEnd))
-                {
-                    currentSlotLocalTime = currentSlotLocalTime.Add(serviceDuration);
-                    continue;
-                }
+                var slotUtcCandidates = GetUtcSlotCandidates(slotLocalStartDateTime, slotLocalEndDateTime, timeZone, serviceDuration);
 
                 // REGRA 1: O horário já passou? (Para agendamentos no mesmo dia)
-                if (slotUtcStart > nowUtc)
+                foreach (var (slotUtcStart, slotUtcEnd) in slotUtcCandidates)
                 {
+                    if (slotUtcStart <= nowUtc)
+                        continue;
+
                     // REGRA 2: Esse slot bate em algum agendamento existente?
                     // Lógica de sobreposição: (Início Slot < Fim Agendamento) E (Fim Slot > Início Agendamento)
                     var hasOverlap = appointments.Any(a =>
@@ -138,9 +135,8 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
                         slotUtcEnd > a.StartTime);
 
                     if (!hasOverlap)
-                    {
                         availableSlotsUtc.Add(slotUtcStart);
-                    }
+                    
                 }
 
                 // Pula para o próximo horário (o "Passo" é a própria duração do serviço)
@@ -198,18 +194,41 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         return TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
     }
 
-    private static bool TryConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone, out DateTime utcDateTime)
+    private static List<DateTime> GetUtcCandidates(DateTime localDateTime, TimeZoneInfo timeZone)
     {
-        utcDateTime = default;
-
         if (timeZone.IsInvalidTime(localDateTime))
-            return false;
+            return [];
 
-        if (timeZone.IsAmbiguousTime(localDateTime))
-            return false;
+        if (!timeZone.IsAmbiguousTime(localDateTime))
+            return [TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone)];
 
-        utcDateTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
-        return true;
+        var offsets = timeZone.GetAmbiguousTimeOffsets(localDateTime);
+        return offsets
+            .Select(offset => DateTime.SpecifyKind(localDateTime - offset, DateTimeKind.Utc))
+            .Distinct()
+            .ToList();
+
     }
+
+    private static List<(DateTime StartUtc, DateTime EndUtc)> GetUtcSlotCandidates(
+        DateTime localStartDateTime,
+        DateTime localEndDateTime,
+        TimeZoneInfo timeZone,
+        TimeSpan serviceDuration)
+    {
+        var startCandidates = GetUtcCandidates(localStartDateTime, timeZone);
+        var endCandidates = GetUtcCandidates(localEndDateTime, timeZone);
+
+        if (startCandidates.Count == 0 || endCandidates.Count == 0)
+            return [];
+
+        return startCandidates
+            .SelectMany(startUtc => endCandidates
+                .Where(endUtc => endUtc > startUtc && endUtc - startUtc == serviceDuration)
+                .Select(endUtc => (StartUtc: startUtc, EndUtc: endUtc)))
+            .Distinct()
+            .ToList();
+    }
+
 
 }
