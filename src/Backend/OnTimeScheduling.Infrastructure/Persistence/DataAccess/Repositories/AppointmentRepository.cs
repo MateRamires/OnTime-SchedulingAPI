@@ -70,4 +70,10 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
             .OrderBy(a => a.StartTime)
             .ToListAsync(ct);
     }
+
+    public async Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _dbContext.Appointments
+            .FirstOrDefaultAsync(a => a.Id == id, ct);
+    }
 }

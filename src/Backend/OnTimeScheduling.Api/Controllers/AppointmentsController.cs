@@ -48,4 +48,18 @@ public class AppointmentsController : OnTimeSchedulingController
 
         return Ok(response);
     }
+
+    [HttpDelete("{id}")]
+    [Authorize] 
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Cancel(
+        [FromServices] ICancelAppointmentUseCase useCase,
+        [FromRoute] Guid id,
+        CancellationToken ct)
+    {
+        await useCase.ExecuteAsync(id, ct);
+
+        return NoContent();
+    }
 }

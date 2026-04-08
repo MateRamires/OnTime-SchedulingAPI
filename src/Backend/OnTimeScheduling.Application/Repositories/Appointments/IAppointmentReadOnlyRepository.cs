@@ -19,4 +19,6 @@ public interface IAppointmentReadOnlyRepository
         DateTime startUtc,
         DateTime endUtc,
         CancellationToken ct = default);
+
+    Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default);
 }
