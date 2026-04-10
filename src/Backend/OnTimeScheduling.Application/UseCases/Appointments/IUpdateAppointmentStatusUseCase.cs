@@ -2,7 +2,7 @@
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
 
-public interface IUpdateProviderAppointmentStatusUseCase
+public interface IUpdateAppointmentStatusUseCase
 {
     Task ExecuteAsync(Guid appointmentId, RequestUpdateProviderAppointmentStatusJson request, CancellationToken ct = default);
 }

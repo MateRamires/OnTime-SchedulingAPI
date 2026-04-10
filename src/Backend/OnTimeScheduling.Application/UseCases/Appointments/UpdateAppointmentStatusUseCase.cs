@@ -8,14 +8,14 @@ using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
 
-public class UpdateProviderAppointmentStatusUseCase : IUpdateProviderAppointmentStatusUseCase
+public class UpdateAppointmentStatusUseCase : IUpdateAppointmentStatusUseCase
 {
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
     private readonly ILoggedUser _loggedUser;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateProviderAppointmentStatusUseCase(
+    public UpdateAppointmentStatusUseCase(
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IAppointmentWriteOnlyRepository appointmentWriteRepository,
         ILoggedUser loggedUser,

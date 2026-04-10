@@ -70,7 +70,7 @@ public class AppointmentsController : OnTimeSchedulingController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateProviderOutcome(
-        [FromServices] IUpdateProviderAppointmentStatusUseCase useCase,
+        [FromServices] IUpdateAppointmentStatusUseCase useCase,
         [FromRoute] Guid id,
         [FromBody] RequestUpdateProviderAppointmentStatusJson request,
         CancellationToken ct)
