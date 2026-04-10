@@ -50,7 +50,7 @@ public class AppointmentsController : OnTimeSchedulingController
     }
 
     [HttpDelete("{id}")]
-    [Authorize] 
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT,PROVIDER")] 
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancel(
@@ -62,4 +62,22 @@ public class AppointmentsController : OnTimeSchedulingController
 
         return NoContent();
     }
+
+    [HttpPatch("{id}/provider-outcome")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT,PROVIDER")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateProviderOutcome(
+        [FromServices] IUpdateProviderAppointmentStatusUseCase useCase,
+        [FromRoute] Guid id,
+        [FromBody] RequestUpdateProviderAppointmentStatusJson request,
+        CancellationToken ct)
+    {
+        await useCase.ExecuteAsync(id, request, ct);
+
+        return NoContent();
+    }
+
 }

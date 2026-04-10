@@ -58,9 +58,31 @@ public class Appointment : TenantEntity
 
     public void Cancel()
     {
-        if (Status == AppointmentStatus.Completed)
-            throw new DomainRuleException("Cannot cancel an already completed appointment.");
+        if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.NoShow)
+            throw new DomainRuleException("Cannot cancel an appointment that was already finalized.");
 
         Status = AppointmentStatus.Canceled;
     }
+
+    public void MarkAsCompleted()
+    {
+        EnsureCanSetProviderOutcome();
+        Status = AppointmentStatus.Completed;
+    }
+
+    public void MarkAsNoShow()
+    {
+        EnsureCanSetProviderOutcome();
+        Status = AppointmentStatus.NoShow;
+    }
+
+    private void EnsureCanSetProviderOutcome()
+    {
+        if (Status == AppointmentStatus.Canceled)
+            throw new DomainRuleException("Cannot set outcome for a canceled appointment.");
+
+        if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.NoShow)
+            throw new DomainRuleException("Appointment outcome has already been finalized.");
+    }
+
 }
