@@ -8,7 +8,8 @@ public interface IAppointmentReadOnlyRepository
         Guid professionalId,
         DateTime startTime,
         DateTime endTime,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        Guid? ignoredAppointmentId = null);
     Task<List<Appointment>> GetAppointmentsByPeriod(
         Guid professionalId,
         DateTime startPeriod,

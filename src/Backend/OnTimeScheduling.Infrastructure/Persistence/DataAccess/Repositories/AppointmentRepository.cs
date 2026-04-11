@@ -28,12 +28,14 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
         Guid professionalId,
         DateTime newAppointmentStartTime,
         DateTime newAppointmentEndTime,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? ignoredAppointmentId = null)
     {
         return await _dbContext.Appointments
             .AnyAsync(a =>
                 a.ProfessionalId == professionalId &&
                 a.Status != AppointmentStatus.Canceled &&
+                (!ignoredAppointmentId.HasValue || a.Id != ignoredAppointmentId.Value) &&
                 a.EndTime > newAppointmentStartTime && newAppointmentEndTime > a.StartTime,
             ct);
     }

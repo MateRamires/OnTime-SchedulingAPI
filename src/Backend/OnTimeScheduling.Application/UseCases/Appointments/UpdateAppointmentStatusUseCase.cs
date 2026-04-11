@@ -3,7 +3,6 @@ using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Communication.Enums;
 using OnTimeScheduling.Communication.Requests;
-using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;

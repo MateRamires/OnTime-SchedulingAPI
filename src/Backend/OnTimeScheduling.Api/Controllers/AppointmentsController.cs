@@ -49,6 +49,23 @@ public class AppointmentsController : OnTimeSchedulingController
         return Ok(response);
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(
+        [FromServices] IUpdateAppointmentUseCase useCase,
+        [FromRoute] Guid id,
+        [FromBody] RequestUpdateAppointmentJson request,
+        CancellationToken ct)
+    {
+        await useCase.ExecuteAsync(id, request, ct);
+
+        return NoContent();
+    }
+
+
     [HttpDelete("{id}")]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT,PROVIDER")] 
     [ProducesResponseType(StatusCodes.Status204NoContent)]
