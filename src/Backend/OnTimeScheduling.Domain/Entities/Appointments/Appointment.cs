@@ -56,6 +56,28 @@ public class Appointment : TenantEntity
         EndTime = end.ToUniversalTime();
     }
 
+    public void Reschedule(
+       Guid professionalId,
+       Guid serviceId,
+       Guid locationId,
+       string clientName,
+       string clientPhone,
+       DateTime startTime,
+       DateTime endTime)
+    {
+        if (Status != AppointmentStatus.Scheduled)
+            throw new DomainRuleException("Only scheduled appointments can be edited.");
+
+        ProfessionalId = professionalId;
+        ServiceId = serviceId;
+        LocationId = locationId;
+        ClientName = clientName;
+        ClientPhone = clientPhone;
+
+        SetTimes(startTime, endTime);
+    }
+
+
     public void Cancel()
     {
         if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.NoShow)
