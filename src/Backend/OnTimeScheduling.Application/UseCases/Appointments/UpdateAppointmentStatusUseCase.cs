@@ -33,7 +33,7 @@ public class UpdateAppointmentStatusUseCase : IUpdateAppointmentStatusUseCase
         var appointment = await _appointmentReadRepository.GetAppointmentByIdAsync(appointmentId, ct)
             ?? throw new NotFoundException("Appointment not found.");
 
-        if (appointment.ProfessionalId != loggedUser.Id)
+        if (loggedUser.Role == Domain.Enums.UserRole.PROVIDER && appointment.ProfessionalId != loggedUser.Id)
             throw new ErrorOnUnauthorizedException("Providers can only update their own appointments.");
 
         switch (request.Status)
