@@ -1,0 +1,59 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using OnTimeScheduling.Domain.Entities.Clients;
+using OnTimeScheduling.Domain.Entities.Company;
+
+namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
+
+public class ClientConfiguration : IEntityTypeConfiguration<Client>
+{
+    public void Configure(EntityTypeBuilder<Client> builder)
+    {
+        builder.ToTable("clients");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
+        builder.Property(x => x.CompanyId)
+            .HasColumnName("company_id")
+            .IsRequired();
+
+        builder.Property(x => x.Name)
+            .HasColumnName("name")
+            .IsRequired()
+            .HasMaxLength(120);
+
+        builder.Property(x => x.Phone)
+            .HasColumnName("phone")
+            .IsRequired()
+            .HasMaxLength(30);
+
+        builder.Property(x => x.Email)
+            .HasColumnName("email")
+            .HasMaxLength(120);
+
+        builder.Property(x => x.Status)
+            .HasColumnName("status")
+            .HasConversion<int>()
+            .IsRequired();
+
+        builder.Property(x => x.CreatedAt)
+            .HasColumnName("created_at_utc")
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedAt)
+            .HasColumnName("updated_at_utc")
+            .IsRequired();
+
+        builder.HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.CompanyId, x.Phone }).IsUnique();
+        builder.HasIndex(x => new { x.CompanyId, x.Name });
+    }
+
+}
