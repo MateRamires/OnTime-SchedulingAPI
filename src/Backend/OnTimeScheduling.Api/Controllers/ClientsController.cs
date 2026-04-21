@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnTimeScheduling.Application.UseCases.Clients;
+using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Responses;
 
 namespace OnTimeScheduling.Api.Controllers;
 

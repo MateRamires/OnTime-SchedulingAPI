@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;

@@ -28,10 +28,10 @@ public static class DependencyInjectionExtension
         services.AddScoped<IUpdateAppointmentUseCase, UpdateAppointmentUseCase>();
         services.AddScoped<IUpdateAppointmentStatusUseCase, UpdateAppointmentStatusUseCase>();
 
-        services.AddScoped<IRegisterClientUseCase, RegisterClientUseCase>();
+        /*services.AddScoped<IRegisterClientUseCase, RegisterClientUseCase>();
         services.AddScoped<IGetClientsUseCase, GetClientsUseCase>();
         services.AddScoped<IGetClientByIdUseCase, GetClientByIdUseCase>();
         services.AddScoped<IUpdateClientUseCase, UpdateClientUseCase>();
-        services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();
+        services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();*/
     }
 }

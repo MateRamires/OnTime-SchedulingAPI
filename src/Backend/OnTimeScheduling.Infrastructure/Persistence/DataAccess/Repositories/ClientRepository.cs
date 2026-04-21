@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Repositories.Clients;
+using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess.Repositories;
