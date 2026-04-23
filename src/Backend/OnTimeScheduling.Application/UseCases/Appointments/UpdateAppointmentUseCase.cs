@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Application.Repositories.Appointments;
+﻿
+using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
@@ -7,17 +8,15 @@ using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests;
-using OnTimeScheduling.Communication.Responses;
-using OnTimeScheduling.Domain.Entities.Appointments;
 using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
 
-public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
+public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 {
-    private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
+    private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
@@ -26,9 +25,9 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
-    public RegisterAppointmentUseCase(
-        IAppointmentWriteOnlyRepository appointmentWriteRepository,
+    public UpdateAppointmentUseCase(
         IAppointmentReadOnlyRepository appointmentReadRepository,
+        IAppointmentWriteOnlyRepository appointmentWriteRepository,
         IServiceReadOnlyRepository serviceReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
@@ -37,8 +36,8 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
-        _appointmentWriteRepository = appointmentWriteRepository;
         _appointmentReadRepository = appointmentReadRepository;
+        _appointmentWriteRepository = appointmentWriteRepository;
         _serviceReadRepository = serviceReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
         _userRepository = userRepository;
@@ -48,43 +47,42 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ResponseRegisterAppointmentJson> ExecuteAsync(RequestRegisterAppointmentJson request, CancellationToken ct = default)
+    public async Task ExecuteAsync(Guid appointmentId, RequestUpdateAppointmentJson request, CancellationToken ct = default)
     {
         ValidateBasicFields(request);
+
+        var appointment = await _appointmentReadRepository.GetAppointmentByIdAsync(appointmentId, ct)
+            ?? throw new NotFoundException("Appointment not found.");
+
+        if (appointment.Status != AppointmentStatus.Scheduled)
+            throw new ErrorOnValidationException(["Only scheduled appointments can be edited."]);
 
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
         var sanitizedClientName = request.ClientName.Trim();
         var sanitizedClientPhone = request.ClientPhone.Trim();
-
         var startTimeUtc = request.StartTime;
-        var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
+        var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
-        await ValidateBusinessRulesAsync(request, startTimeUtc, endTime, ct);
+        await ValidateBusinessRulesAsync(appointmentId, request, startTimeUtc, endTimeUtc, ct);
 
-        var appointment = new Appointment(
-            professionalId: request.ProfessionalId,
-            serviceId: request.ServiceId,
-            locationId: request.LocationId,
-            clientName: sanitizedClientName,
-            clientPhone: sanitizedClientPhone,
-            startTime: startTimeUtc,
-            endTime: endTime 
-        );
+        appointment.Reschedule(
+            request.ProfessionalId,
+            request.ServiceId,
+            request.LocationId,
+            sanitizedClientName,
+            sanitizedClientPhone,
+            startTimeUtc,
+            endTimeUtc);
 
-        await _appointmentWriteRepository.Add(appointment, ct);
+        _appointmentWriteRepository.Update(appointment);
         await _unitOfWork.Commit(ct);
-
-        return new ResponseRegisterAppointmentJson
-        {
-            Id = appointment.Id
-        };
     }
 
-    private void ValidateBasicFields(RequestRegisterAppointmentJson request)
+    private void ValidateBasicFields(RequestUpdateAppointmentJson request)
     {
-        var validator = new RegisterAppointmentValidator();
+        var validator = new UpdateAppointmentValidator();
         var result = validator.Validate(request);
 
         if (!result.IsValid)
@@ -94,7 +92,12 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         }
     }
 
-    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request,DateTime startTimeUtc,DateTime calculatedEndTime, CancellationToken ct)
+    private async Task ValidateBusinessRulesAsync(
+        Guid appointmentId,
+        RequestUpdateAppointmentJson request,
+        DateTime startTimeUtc,
+        DateTime calculatedEndTime,
+        CancellationToken ct)
     {
         var errors = new List<string>();
 
@@ -121,7 +124,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             errors.Add("This professional does not provide the selected service.");
 
         var isTimeSlotTaken = await _appointmentReadRepository
-            .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct);
+            .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct, appointmentId);
 
         if (isTimeSlotTaken)
             errors.Add("The selected time slot is no longer available.");
@@ -173,9 +176,8 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             }
         }
 
-
-
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
     }
+
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.UseCases.Appointments;
+using OnTimeScheduling.Application.UseCases.Clients;
 using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;
 using OnTimeScheduling.Application.UseCases.Schedules;
@@ -11,7 +12,7 @@ namespace OnTimeScheduling.Application;
 
 public static class DependencyInjectionExtension
 {
-    public static void AddApplication(this IServiceCollection services) 
+    public static void AddApplication(this IServiceCollection services)
     {
         services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
         services.AddScoped<IRegisterSuperAdminUseCase, RegisterSuperAdminUseCase>();
@@ -21,6 +22,17 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRegisterServiceUseCase, RegisterServiceUseCase>();
         services.AddScoped<ILinkProfessionalServiceUseCase, LinkProfessionalServiceUseCase>();
         services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
+
         services.AddScoped<IRegisterAppointmentUseCase, RegisterAppointmentUseCase>();
+        services.AddScoped<IGetAvailableTimeSlotsUseCase, GetAvailableTimeSlotsUseCase>();
+        services.AddScoped<ICancelAppointmentUseCase, CancelAppointmentUseCase>();
+        services.AddScoped<IUpdateAppointmentUseCase, UpdateAppointmentUseCase>();
+        services.AddScoped<IUpdateAppointmentStatusUseCase, UpdateAppointmentStatusUseCase>();
+
+        services.AddScoped<IRegisterClientUseCase, RegisterClientUseCase>();
+        services.AddScoped<IGetClientsUseCase, GetClientsUseCase>();
+        services.AddScoped<IGetClientByIdUseCase, GetClientByIdUseCase>();
+        services.AddScoped<IUpdateClientUseCase, UpdateClientUseCase>();
+        services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();
     }
 }

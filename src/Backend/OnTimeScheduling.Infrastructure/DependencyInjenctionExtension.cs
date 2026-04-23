@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
@@ -33,6 +34,11 @@ public static class DependencyInjenctionExtension
         services.AddScoped<CompanyRepository>();
         services.AddScoped<ICompanyWriteOnlyRepository>(sp => sp.GetRequiredService<CompanyRepository>());
         services.AddScoped<ICompanyReadOnlyRepository>(sp => sp.GetRequiredService<CompanyRepository>());
+
+        //Client Repository
+        services.AddScoped<ClientRepository>();
+        services.AddScoped<IClientWriteOnlyRepository>(sp => sp.GetRequiredService<ClientRepository>());
+        services.AddScoped<IClientReadOnlyRepository>(sp => sp.GetRequiredService<ClientRepository>());
 
         //Company Repository
         services.AddScoped<LocationRepository>();

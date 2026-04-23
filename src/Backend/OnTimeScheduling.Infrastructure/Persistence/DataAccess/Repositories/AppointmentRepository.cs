@@ -28,13 +28,14 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
         Guid professionalId,
         DateTime newAppointmentStartTime,
         DateTime newAppointmentEndTime,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Guid? ignoredAppointmentId = null)
     {
         return await _dbContext.Appointments
             .AnyAsync(a =>
                 a.ProfessionalId == professionalId &&
                 a.Status != AppointmentStatus.Canceled &&
-                //!(newAppointmentEndTime <= a.StartTime || newAppointmentStartTime >= a.EndTime),
+                (!ignoredAppointmentId.HasValue || a.Id != ignoredAppointmentId.Value) &&
                 a.EndTime > newAppointmentStartTime && newAppointmentEndTime > a.StartTime,
             ct);
     }
@@ -53,5 +54,28 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
                 a.StartTime < endPeriod)
             .OrderBy(a => a.StartTime)
             .ToListAsync(ct);
+    }
+
+    public async Task<List<Appointment>> GetAppointmentsByDateRangeAsync(
+        Guid professionalId,
+        DateTime startUtc,
+        DateTime endUtc,
+        CancellationToken ct = default)
+    {
+        return await _dbContext.Appointments
+            .AsNoTracking()
+            .Where(a =>
+                a.ProfessionalId == professionalId &&
+                a.Status != AppointmentStatus.Canceled && 
+                a.StartTime < endUtc &&
+                a.EndTime > startUtc)
+            .OrderBy(a => a.StartTime)
+            .ToListAsync(ct);
+    }
+
+    public async Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _dbContext.Appointments
+            .FirstOrDefaultAsync(a => a.Id == id, ct);
     }
 }

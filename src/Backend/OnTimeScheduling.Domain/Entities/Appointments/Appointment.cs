@@ -56,11 +56,55 @@ public class Appointment : TenantEntity
         EndTime = end.ToUniversalTime();
     }
 
+    public void Reschedule(
+       Guid professionalId,
+       Guid serviceId,
+       Guid locationId,
+       string clientName,
+       string clientPhone,
+       DateTime startTime,
+       DateTime endTime)
+    {
+        if (Status != AppointmentStatus.Scheduled)
+            throw new DomainRuleException("Only scheduled appointments can be edited.");
+
+        ProfessionalId = professionalId;
+        ServiceId = serviceId;
+        LocationId = locationId;
+        ClientName = clientName;
+        ClientPhone = clientPhone;
+
+        SetTimes(startTime, endTime);
+    }
+
+
     public void Cancel()
     {
-        if (Status == AppointmentStatus.Completed)
-            throw new DomainRuleException("Cannot cancel an already completed appointment.");
+        if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.NoShow)
+            throw new DomainRuleException("Cannot cancel an appointment that was already finalized.");
 
         Status = AppointmentStatus.Canceled;
     }
+
+    public void MarkAsCompleted()
+    {
+        EnsureCanSetProviderOutcome();
+        Status = AppointmentStatus.Completed;
+    }
+
+    public void MarkAsNoShow()
+    {
+        EnsureCanSetProviderOutcome();
+        Status = AppointmentStatus.NoShow;
+    }
+
+    private void EnsureCanSetProviderOutcome()
+    {
+        if (Status == AppointmentStatus.Canceled)
+            throw new DomainRuleException("Cannot set outcome for a canceled appointment.");
+
+        if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.NoShow)
+            throw new DomainRuleException("Appointment outcome has already been finalized.");
+    }
+
 }

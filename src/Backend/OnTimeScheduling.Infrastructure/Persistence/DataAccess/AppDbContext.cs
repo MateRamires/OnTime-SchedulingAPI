@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;
@@ -17,6 +18,7 @@ public class AppDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
     public DbSet<User> Users => Set<User>();
+    public DbSet<Client> Clients => Set<Client>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Service> Services => Set<Service>();

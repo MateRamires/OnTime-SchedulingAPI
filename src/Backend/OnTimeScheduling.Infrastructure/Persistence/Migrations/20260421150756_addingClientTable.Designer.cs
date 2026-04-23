@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
@@ -11,9 +12,11 @@ using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421150756_addingClientTable")]
+    partial class addingClientTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -146,8 +149,7 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                     b.HasIndex("CompanyId", "Name");
 
                     b.HasIndex("CompanyId", "Phone")
-                        .IsUnique()
-                        .HasFilter("status = 1");
+                        .IsUnique();
 
                     b.ToTable("clients", (string)null);
                 });

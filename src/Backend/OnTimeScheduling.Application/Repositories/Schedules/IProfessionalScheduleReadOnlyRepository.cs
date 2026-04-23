@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.Repositories.Schedules;
+﻿using OnTimeScheduling.Domain.Entities.Schedules;
+
+namespace OnTimeScheduling.Application.Repositories.Schedules;
 
 public interface IProfessionalScheduleReadOnlyRepository
 {
@@ -15,6 +17,12 @@ public interface IProfessionalScheduleReadOnlyRepository
         DayOfWeek dayOfWeek,
         TimeSpan startTime,
         TimeSpan endTime,
+        CancellationToken ct = default);
+
+    Task<List<ProfessionalSchedule>> GetSchedulesByDayAsync(
+        Guid userId,
+        Guid locationId,
+        DayOfWeek dayOfWeek,
         CancellationToken ct = default);
 
 }
