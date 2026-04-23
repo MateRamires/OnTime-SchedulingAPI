@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
 
@@ -52,7 +53,10 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
             .HasForeignKey(x => x.CompanyId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => new { x.CompanyId, x.Phone }).IsUnique();
+        builder.HasIndex(x => new { x.CompanyId, x.Phone })
+            .IsUnique()
+            .HasFilter($"status = {(int)RecordStatus.Active}");
+
         builder.HasIndex(x => new { x.CompanyId, x.Name });
     }
 

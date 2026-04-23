@@ -29,14 +29,27 @@ public class ClientRepository : IClientWriteOnlyRepository, IClientReadOnlyRepos
         return _dbContext.Clients.AnyAsync(c => c.Phone == phone && c.Status == RecordStatus.Active, ct);
     }
 
+    public Task<bool> ExistsActiveByPhoneExceptId(string phone, Guid clientId, CancellationToken ct = default)
+    {
+        return _dbContext.Clients.AnyAsync(c =>
+            c.Phone == phone &&
+            c.Status == RecordStatus.Active &&
+            c.Id != clientId, ct);
+    }
+
+
     public Task<Client?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return _dbContext.Clients.FirstOrDefaultAsync(c => c.Id == id && c.Status == RecordStatus.Active, ct);
+        return _dbContext.Clients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id && c.Status == RecordStatus.Active, ct);
+
     }
 
     public Task<List<Client>> GetAllActiveAsync(CancellationToken ct = default)
     {
         return _dbContext.Clients
+            .AsNoTracking()
             .Where(c => c.Status == RecordStatus.Active)
             .OrderBy(c => c.Name)
             .ToListAsync(ct);

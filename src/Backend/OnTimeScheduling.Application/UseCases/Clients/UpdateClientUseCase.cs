@@ -28,11 +28,7 @@ public class UpdateClientUseCase : IUpdateClientUseCase
         request.Phone = request.Phone?.Trim() ?? string.Empty;
         request.Email = request.Email?.Trim();
 
-        var validator = new UpdateClientValidator();
-        var validation = validator.Validate(request);
-
-        if (!validation.IsValid)
-            throw new ErrorOnValidationException(validation.Errors.Select(e => e.ErrorMessage).ToList());
+        await Validate(request, clientId, ct);
 
         var client = await _clientReadRepository.GetByIdAsync(clientId, ct)
             ?? throw new NotFoundException("Client not found.");
@@ -42,5 +38,19 @@ public class UpdateClientUseCase : IUpdateClientUseCase
         _clientWriteRepository.Update(client);
         await _unitOfWork.Commit(ct);
     }
+
+    private async Task Validate(RequestUpdateClientJson request, Guid clientId, CancellationToken ct)
+    {
+        var validator = new UpdateClientValidator();
+        var validation = validator.Validate(request);
+
+        var phoneAlreadyExists = await _clientReadRepository.ExistsActiveByPhoneExceptId(request.Phone, clientId, ct);
+        if (phoneAlreadyExists)
+            validation.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "A client with this phone already exists."));
+
+        if (!validation.IsValid)
+            throw new ErrorOnValidationException(validation.Errors.Select(e => e.ErrorMessage).ToList());
+    }
+
 
 }
