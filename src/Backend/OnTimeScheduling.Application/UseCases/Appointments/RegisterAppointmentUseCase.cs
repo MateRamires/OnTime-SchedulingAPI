@@ -1,4 +1,5 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
@@ -18,6 +19,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 {
     private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
+    private readonly IClientReadOnlyRepository _clientReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
@@ -30,6 +32,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         IAppointmentWriteOnlyRepository appointmentWriteRepository,
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IServiceReadOnlyRepository serviceReadRepository,
+        IClientReadOnlyRepository clientReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
@@ -40,6 +43,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         _appointmentWriteRepository = appointmentWriteRepository;
         _appointmentReadRepository = appointmentReadRepository;
         _serviceReadRepository = serviceReadRepository;
+        _clientReadRepository = clientReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
@@ -55,20 +59,16 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        var sanitizedClientName = request.ClientName.Trim();
-        var sanitizedClientPhone = request.ClientPhone.Trim();
-
         var startTimeUtc = request.StartTime;
         var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
         await ValidateBusinessRulesAsync(request, startTimeUtc, endTime, ct);
 
         var appointment = new Appointment(
+            clientId: request.ClientId,
             professionalId: request.ProfessionalId,
             serviceId: request.ServiceId,
             locationId: request.LocationId,
-            clientName: sanitizedClientName,
-            clientPhone: sanitizedClientPhone,
             startTime: startTimeUtc,
             endTime: endTime 
         );
@@ -94,7 +94,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         }
     }
 
-    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request,DateTime startTimeUtc,DateTime calculatedEndTime, CancellationToken ct)
+    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request, DateTime startTimeUtc, DateTime calculatedEndTime, CancellationToken ct)
     {
         var errors = new List<string>();
 
@@ -103,6 +103,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 
         if (_tenantProvider.CompanyId.HasValue)
         {
+            var client = await _clientReadRepository.GetByIdAsync(request.ClientId, ct);
+            if (client is null)
+                errors.Add("Client not found in this tenant.");
+
             var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
             if (professional is null)
                 errors.Add("Professional not found in this tenant.");
@@ -172,8 +176,6 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
                 }
             }
         }
-
-
 
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);

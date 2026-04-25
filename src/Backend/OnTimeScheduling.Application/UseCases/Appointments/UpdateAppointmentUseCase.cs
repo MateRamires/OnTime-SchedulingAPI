@@ -1,5 +1,6 @@
 ﻿
 using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
@@ -17,6 +18,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 {
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
+    private readonly IClientReadOnlyRepository _clientReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
@@ -29,6 +31,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IAppointmentWriteOnlyRepository appointmentWriteRepository,
         IServiceReadOnlyRepository serviceReadRepository,
+        IClientReadOnlyRepository clientReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
@@ -40,6 +43,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         _appointmentWriteRepository = appointmentWriteRepository;
         _serviceReadRepository = serviceReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
+        _clientReadRepository = clientReadRepository;
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _scheduleReadRepository = scheduleReadRepository;
@@ -60,19 +64,16 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
             ?? throw new NotFoundException("Service not found.");
 
-        var sanitizedClientName = request.ClientName.Trim();
-        var sanitizedClientPhone = request.ClientPhone.Trim();
         var startTimeUtc = request.StartTime;
         var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
         await ValidateBusinessRulesAsync(appointmentId, request, startTimeUtc, endTimeUtc, ct);
 
         appointment.Reschedule(
+            request.ClientId,
             request.ProfessionalId,
             request.ServiceId,
             request.LocationId,
-            sanitizedClientName,
-            sanitizedClientPhone,
             startTimeUtc,
             endTimeUtc);
 
@@ -106,6 +107,10 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 
         if (_tenantProvider.CompanyId.HasValue)
         {
+            var client = await _clientReadRepository.GetByIdAsync(request.ClientId, ct);
+            if (client is null)
+                errors.Add("Client not found in this tenant.");
+
             var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
             if (professional is null)
                 errors.Add("Professional not found in this tenant.");
@@ -179,5 +184,4 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
     }
-
 }

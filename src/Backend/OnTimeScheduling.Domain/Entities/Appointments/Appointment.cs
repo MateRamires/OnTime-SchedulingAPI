@@ -6,13 +6,10 @@ namespace OnTimeScheduling.Domain.Entities.Appointments;
 
 public class Appointment : TenantEntity
 {
+    public Guid ClientId { get; private set; }
     public Guid ProfessionalId { get; private set; }
     public Guid ServiceId { get; private set; }
     public Guid LocationId { get; private set; }
-
-    // TODO: Create a client entity.
-    public string ClientName { get; private set; } = string.Empty;
-    public string ClientPhone { get; private set; } = string.Empty;
 
     public DateTime StartTime { get; private set; }
     public DateTime EndTime { get; private set; }
@@ -26,19 +23,17 @@ public class Appointment : TenantEntity
     private Appointment() { } 
 
     public Appointment(
+        Guid clientId,
         Guid professionalId,
         Guid serviceId,
         Guid locationId,
-        string clientName,
-        string clientPhone,
         DateTime startTime,
         DateTime endTime)
     {
+        ClientId = clientId;
         ProfessionalId = professionalId;
         ServiceId = serviceId;
         LocationId = locationId;
-        ClientName = clientName;
-        ClientPhone = clientPhone;
 
         SetTimes(startTime, endTime);
         Status = AppointmentStatus.Scheduled; 
@@ -57,22 +52,20 @@ public class Appointment : TenantEntity
     }
 
     public void Reschedule(
+       Guid clientId,
        Guid professionalId,
        Guid serviceId,
        Guid locationId,
-       string clientName,
-       string clientPhone,
        DateTime startTime,
        DateTime endTime)
     {
         if (Status != AppointmentStatus.Scheduled)
             throw new DomainRuleException("Only scheduled appointments can be edited.");
 
+        ClientId = clientId;
         ProfessionalId = professionalId;
         ServiceId = serviceId;
         LocationId = locationId;
-        ClientName = clientName;
-        ClientPhone = clientPhone;
 
         SetTimes(startTime, endTime);
     }
