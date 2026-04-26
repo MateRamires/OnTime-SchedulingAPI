@@ -176,7 +176,6 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
                 }
             }
         }
-
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
     }
