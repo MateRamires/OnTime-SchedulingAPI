@@ -12,6 +12,7 @@ public class AppointmentsController : OnTimeSchedulingController
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(typeof(ResponseRegisterAppointmentJson), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Register(
         [FromServices] IRegisterAppointmentUseCase useCase,
@@ -53,6 +54,7 @@ public class AppointmentsController : OnTimeSchedulingController
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
         [FromServices] IUpdateAppointmentUseCase useCase,

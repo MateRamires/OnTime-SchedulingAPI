@@ -128,7 +128,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct);
 
         if (isTimeSlotTaken)
-            errors.Add("The selected time slot is no longer available.");
+            throw new ConflictException("The selected time slot is no longer available due to an overlapping appointment.");
 
         if (locationTimeZoneId is not null)
         {
