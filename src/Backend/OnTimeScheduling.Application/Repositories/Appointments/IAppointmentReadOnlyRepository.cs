@@ -1,4 +1,5 @@
 ﻿using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Application.Repositories.Appointments;
 
@@ -22,4 +23,13 @@ public interface IAppointmentReadOnlyRepository
         CancellationToken ct = default);
 
     Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default);
+
+    Task<List<AppointmentAgendaItem>> GetAgendaAsync(
+        DateTime startUtc,
+        DateTime endUtc,
+        Guid? locationId,
+        Guid? professionalId,
+        AppointmentStatus? status,
+        CancellationToken ct = default);
+
 }

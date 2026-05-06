@@ -99,4 +99,29 @@ public class AppointmentsController : OnTimeSchedulingController
         return NoContent();
     }
 
+    [HttpGet("agenda")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDailyAgenda(
+        [FromServices] IGetDailyAgendaUseCase useCase,
+        [FromQuery] RequestGetDailyAgendaJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+        return Ok(response);
+    }
+
+    [HttpGet("my-agenda")]
+    [Authorize(Roles = "PROVIDER")]
+    [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyAgenda(
+        [FromServices] IGetMyAgendaUseCase useCase,
+        [FromQuery] RequestGetMyAgendaJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+        return Ok(response);
+    }
+
+
 }
