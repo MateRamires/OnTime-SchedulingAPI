@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.UseCases.Appointments;
+using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Application.UseCases.Clients;
 using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;

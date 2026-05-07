@@ -1,4 +1,7 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
+﻿using OnTimeScheduling.Communication.Requests.Appointments;
+using OnTimeScheduling.Communication.Responses.Appointments;
+
+namespace OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 
 public interface IGetMyAgendaUseCase
 {

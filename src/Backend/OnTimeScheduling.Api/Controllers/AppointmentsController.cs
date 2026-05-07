@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnTimeScheduling.Application.UseCases.Appointments;
+using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Communication.Responses.Appointments;
 
 namespace OnTimeScheduling.Api.Controllers;
 

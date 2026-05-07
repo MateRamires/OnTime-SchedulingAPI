@@ -1,5 +1,8 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Security.Token;
+using OnTimeScheduling.Communication.Requests.Appointments;
+using OnTimeScheduling.Communication.Responses.Appointments;
+using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
