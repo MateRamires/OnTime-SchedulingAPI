@@ -66,7 +66,7 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
             .AsNoTracking()
             .Where(a =>
                 a.ProfessionalId == professionalId &&
-                a.Status != AppointmentStatus.Canceled && 
+                a.Status != AppointmentStatus.Canceled &&
                 a.StartTime < endUtc &&
                 a.EndTime > startUtc)
             .OrderBy(a => a.StartTime)
@@ -78,4 +78,48 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
         return await _dbContext.Appointments
             .FirstOrDefaultAsync(a => a.Id == id, ct);
     }
+
+    public async Task<List<AppointmentAgendaItem>> GetAgendaAsync(
+        DateTime startUtc,
+        DateTime endUtc,
+        Guid? locationId,
+        Guid? professionalId,
+        AppointmentStatus? status,
+        CancellationToken ct = default)
+    {
+        var query = _dbContext.Appointments.AsNoTracking()
+            .Where(a => a.StartTime < endUtc && a.EndTime > startUtc);
+
+        if (locationId.HasValue)
+            query = query.Where(a => a.LocationId == locationId.Value);
+
+        if (professionalId.HasValue)
+            query = query.Where(a => a.ProfessionalId == professionalId.Value);
+
+        if (status.HasValue)
+            query = query.Where(a => a.Status == status.Value);
+
+        return await query
+            .Join(_dbContext.Clients, a => a.ClientId, c => c.Id, (a, c) => new { a, c })
+            .Join(_dbContext.Users, x => x.a.ProfessionalId, u => u.Id, (x, u) => new { x.a, x.c, u })
+            .Join(_dbContext.Services, x => x.a.ServiceId, s => s.Id, (x, s) => new { x.a, x.c, x.u, s })
+            .Join(_dbContext.Locations, x => x.a.LocationId, l => l.Id, (x, l) => new AppointmentAgendaItem
+            {
+                AppointmentId = x.a.Id,
+                ClientId = x.c.Id,
+                ClientName = x.c.Name,
+                ProfessionalId = x.u.Id,
+                ProfessionalName = x.u.Name,
+                ServiceId = x.s.Id,
+                ServiceName = x.s.Name,
+                LocationId = l.Id,
+                LocationName = l.Name,
+                Status = x.a.Status,
+                StartTimeUtc = x.a.StartTime,
+                EndTimeUtc = x.a.EndTime
+            })
+            .OrderBy(x => x.StartTimeUtc)
+            .ToListAsync(ct);
+    }
+
 }
