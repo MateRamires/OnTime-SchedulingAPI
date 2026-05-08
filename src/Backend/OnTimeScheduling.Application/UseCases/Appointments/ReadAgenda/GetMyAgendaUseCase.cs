@@ -3,6 +3,9 @@ using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses.Appointments;
 using OnTimeScheduling.Domain.Enums;
+using CommunicationAppointmentStatus = OnTimeScheduling.Communication.Enums.AppointmentStatus;
+using DomainAgendaWindow = OnTimeScheduling.Domain.Enums.AgendaWindow;
+using DomainAppointmentStatus = OnTimeScheduling.Domain.Enums.AppointmentStatus;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
@@ -25,11 +28,13 @@ public class GetMyAgendaUseCase : IGetMyAgendaUseCase
             throw new ErrorOnUnauthorizedException("Only providers can access my agenda.");
 
         var startUtc = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-        var endUtc = request.Window == AgendaWindow.Week ? startUtc.AddDays(7) : startUtc.AddDays(1);
+        var window = (DomainAgendaWindow)(int)request.Window;
+        var endUtc = window == DomainAgendaWindow.Week ? startUtc.AddDays(7) : startUtc.AddDays(1);
 
-        var items = await _repo.GetAgendaAsync(startUtc, endUtc, request.LocationId, user.Id, request.Status, ct);
+        var status = request.Status.HasValue ? (DomainAppointmentStatus?)(int)request.Status.Value : null;
+        var items = await _repo.GetAgendaAsync(startUtc, endUtc, request.LocationId, user.Id, status, ct);
 
-        return new ResponseAgendaJson { RangeStartUtc = startUtc, RangeEndUtc = endUtc, Items = items.Select(i => new ResponseAppointmentAgendaItemJson { AppointmentId = i.AppointmentId, ClientId = i.ClientId, ClientName = i.ClientName, ProfessionalId = i.ProfessionalId, ProfessionalName = i.ProfessionalName, LocationId = i.LocationId, LocationName = i.LocationName, ServiceId = i.ServiceId, ServiceName = i.ServiceName, Status = i.Status, StartTimeUtc = i.StartTimeUtc, EndTimeUtc = i.EndTimeUtc }).ToList() };
+        return new ResponseAgendaJson { RangeStartUtc = startUtc, RangeEndUtc = endUtc, Items = items.Select(i => new ResponseAppointmentAgendaItemJson { AppointmentId = i.AppointmentId, ClientId = i.ClientId, ClientName = i.ClientName, ProfessionalId = i.ProfessionalId, ProfessionalName = i.ProfessionalName, LocationId = i.LocationId, LocationName = i.LocationName, ServiceId = i.ServiceId, ServiceName = i.ServiceName, Status = (CommunicationAppointmentStatus)(int)i.Status, StartTimeUtc = i.StartTimeUtc, EndTimeUtc = i.EndTimeUtc }).ToList() };
     }
 
 }
