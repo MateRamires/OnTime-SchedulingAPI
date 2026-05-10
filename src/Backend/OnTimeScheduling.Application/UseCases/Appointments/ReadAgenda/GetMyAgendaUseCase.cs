@@ -73,5 +73,4 @@ public class GetMyAgendaUseCase : IGetMyAgendaUseCase
             throw new ErrorOnValidationException(result.Errors.Select(e => e.ErrorMessage).ToList());
     }
 
-
 }
