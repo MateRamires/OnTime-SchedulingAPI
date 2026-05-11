@@ -18,6 +18,8 @@ public static class DependencyInjectionExtension
         services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
         services.AddScoped<IRegisterSuperAdminUseCase, RegisterSuperAdminUseCase>();
         services.AddScoped<ILoginUseCase, LoginUseCase>();
+        services.AddScoped<IRefreshTokenUseCase, RefreshTokenUseCase>();
+        services.AddScoped<ILogoutUseCase, LogoutUseCase>();
         services.AddScoped<IRegisterCompanyUseCase, RegisterCompanyUseCase>();
         services.AddScoped<IRegisterLocationUseCase, RegisterLocationUseCase>();
         services.AddScoped<IRegisterServiceUseCase, RegisterServiceUseCase>();
