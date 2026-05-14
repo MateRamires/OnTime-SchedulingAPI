@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Users.Auth;
+﻿using OnTimeScheduling.Communication.Requests;
+
+namespace OnTimeScheduling.Application.UseCases.Users.Auth;
 
 public interface ILogoutUseCase
 {

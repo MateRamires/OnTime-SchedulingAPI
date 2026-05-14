@@ -6,6 +6,7 @@ using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;
 using OnTimeScheduling.Application.UseCases.Schedules;
 using OnTimeScheduling.Application.UseCases.Services;
+using OnTimeScheduling.Application.UseCases.Users.Auth;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Application.UseCases.Users.Login;
 

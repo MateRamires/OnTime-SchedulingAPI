@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.Repositories.Auth;
+﻿using OnTimeScheduling.Domain.Entities.Auth;
+
+namespace OnTimeScheduling.Application.Repositories.Auth;
 
 public interface IRefreshTokenRepository
 {

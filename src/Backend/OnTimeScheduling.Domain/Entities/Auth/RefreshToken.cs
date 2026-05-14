@@ -1,6 +1,8 @@
-﻿namespace OnTimeScheduling.Domain.Entities.Auth;
+﻿using OnTimeScheduling.Domain.Entities.DefaultEntity;
 
-public class RefreshToken
+namespace OnTimeScheduling.Domain.Entities.Auth;
+
+public class RefreshToken : BaseEntity
 {
     public Guid UserId { get; private set; }
     public string TokenHash { get; private set; } = null!;

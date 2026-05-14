@@ -1,10 +1,11 @@
 ﻿using OnTimeScheduling.Application.Repositories.Auth;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Security.Token;
+using OnTimeScheduling.Communication.Requests;
 
 namespace OnTimeScheduling.Application.UseCases.Users.Auth;
 
-public class LogoutUseCase
+public class LogoutUseCase : ILogoutUseCase
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;

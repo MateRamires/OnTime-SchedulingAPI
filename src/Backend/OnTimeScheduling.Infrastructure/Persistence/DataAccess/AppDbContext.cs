@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Entities.Auth;
 using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
@@ -25,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<ProfessionalService> ProfessionalServices => Set<ProfessionalService>();
     public DbSet<ProfessionalSchedule> ProfessionalSchedules => Set<ProfessionalSchedule>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {

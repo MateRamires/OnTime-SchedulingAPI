@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OnTimeScheduling.Application.UseCases.Users.Auth;
 using OnTimeScheduling.Application.UseCases.Users.Login;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
