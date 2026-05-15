@@ -33,6 +33,9 @@ public class LoginUseCase : ILoginUseCase
 
     public async Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            throw new InvalidLoginException("Invalid credentials.");
+
         var user = await _userRepository.GetByEmail(request.Email, ct);
 
         if (user is null)

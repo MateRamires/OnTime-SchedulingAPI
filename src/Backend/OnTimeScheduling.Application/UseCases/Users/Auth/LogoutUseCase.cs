@@ -20,6 +20,9 @@ public class LogoutUseCase : ILogoutUseCase
 
     public async Task ExecuteAsync(RequestLogoutJson request, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            return;
+
         var tokenHash = _refreshTokenGenerator.Hash(request.RefreshToken);
         var stored = await _refreshTokenRepository.GetByTokenHashAsync(tokenHash, ct);
         if (stored is not null && stored.IsActive)

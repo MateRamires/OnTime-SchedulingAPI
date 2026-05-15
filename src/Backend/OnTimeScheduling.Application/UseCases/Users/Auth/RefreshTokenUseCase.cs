@@ -31,6 +31,9 @@ public class RefreshTokenUseCase : IRefreshTokenUseCase
 
     public async Task<ResponseLoginJson> ExecuteAsync(RequestRefreshTokenJson request, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            throw new InvalidLoginException("Invalid refresh token.");
+
         var hash = _refreshTokenGenerator.Hash(request.RefreshToken);
         var stored = await _refreshTokenRepository.GetByTokenHashAsync(hash, ct);
 
