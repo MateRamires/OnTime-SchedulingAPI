@@ -17,14 +17,30 @@ public static class DependencyInjectionExtension
     public static void AddApplication(this IServiceCollection services)
     {
         services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
+        services.AddScoped<IGetUsersUseCase, GetUsersUseCase>();
+        services.AddScoped<IGetUserByIdUseCase, GetUserByIdUseCase>();
+        services.AddScoped<IUpdateUserUseCase, UpdateUserUseCase>();
+        services.AddScoped<IActivateUserUseCase, ActivateUserUseCase>();
+        services.AddScoped<IInactivateUserUseCase, InactivateUserUseCase>();
         services.AddScoped<IRegisterSuperAdminUseCase, RegisterSuperAdminUseCase>();
+
         services.AddScoped<ILoginUseCase, LoginUseCase>();
         services.AddScoped<IRefreshTokenUseCase, RefreshTokenUseCase>();
         services.AddScoped<ILogoutUseCase, LogoutUseCase>();
+
         services.AddScoped<IRegisterCompanyUseCase, RegisterCompanyUseCase>();
+
         services.AddScoped<IRegisterLocationUseCase, RegisterLocationUseCase>();
+        services.AddScoped<IGetLocationsUseCase, GetLocationsUseCase>();
+        services.AddScoped<IGetLocationByIdUseCase, GetLocationByIdUseCase>();
+        services.AddScoped<IUpdateLocationUseCase, UpdateLocationUseCase>();
+        services.AddScoped<IActivateLocationUseCase, ActivateLocationUseCase>();
+        services.AddScoped<IInactivateLocationUseCase, InactivateLocationUseCase>();
+
         services.AddScoped<IRegisterServiceUseCase, RegisterServiceUseCase>();
+
         services.AddScoped<ILinkProfessionalServiceUseCase, LinkProfessionalServiceUseCase>();
+
         services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
 
         services.AddScoped<IRegisterAppointmentUseCase, RegisterAppointmentUseCase>();
