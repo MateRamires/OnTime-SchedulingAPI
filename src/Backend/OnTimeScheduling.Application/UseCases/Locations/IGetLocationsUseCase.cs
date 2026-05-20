@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Domain.Enums;
+﻿using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Application.UseCases.Locations;
 

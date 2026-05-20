@@ -1,11 +1,13 @@
 ﻿using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Application.UseCases.Users.Management.Mapper;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Users.Management;
 
-public class GetUsersUseCase
+public class GetUsersUseCase : IGetUsersUseCase
 {
     private readonly IUserRepository _userRepository;
     private readonly ITenantProvider _tenantProvider;

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using OnTimeScheduling.Communication.Requests;
 
 namespace OnTimeScheduling.Application.Validators.Users;
 

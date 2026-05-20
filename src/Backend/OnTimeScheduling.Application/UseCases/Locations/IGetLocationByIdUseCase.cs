@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Locations;
+﻿using OnTimeScheduling.Communication.Responses;
+
+namespace OnTimeScheduling.Application.UseCases.Locations;
 
 public interface IGetLocationByIdUseCase
 {

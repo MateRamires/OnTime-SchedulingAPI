@@ -9,6 +9,7 @@ using OnTimeScheduling.Application.UseCases.Services;
 using OnTimeScheduling.Application.UseCases.Users.Auth;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Application.UseCases.Users.Login;
+using OnTimeScheduling.Application.UseCases.Users.Management;
 
 namespace OnTimeScheduling.Application;
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
+using OnTimeScheduling.Application.UseCases.Users.Management;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Enums;

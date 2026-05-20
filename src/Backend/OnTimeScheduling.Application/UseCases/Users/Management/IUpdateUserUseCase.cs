@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Users.Management;
+﻿using OnTimeScheduling.Communication.Requests;
+
+namespace OnTimeScheduling.Application.UseCases.Users.Management;
 
 public interface IUpdateUserUseCase
 {

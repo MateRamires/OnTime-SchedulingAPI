@@ -1,6 +1,8 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Locations;
+﻿using OnTimeScheduling.Communication.Requests;
 
-public class IUpdateLocationUseCase
+namespace OnTimeScheduling.Application.UseCases.Locations;
+
+public interface IUpdateLocationUseCase
 {
     Task ExecuteAsync(Guid locationId, RequestUpdateLocationJson request, CancellationToken ct = default);
 }

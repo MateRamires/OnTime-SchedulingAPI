@@ -1,6 +1,6 @@
 ﻿namespace OnTimeScheduling.Communication.Responses;
 
-internal class ResponseLocationJson
+public class ResponseLocationJson
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

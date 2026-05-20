@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Domain.Entities.User;
+﻿using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Entities.User;
 
 namespace OnTimeScheduling.Application.UseCases.Users.Management.Mapper;
 

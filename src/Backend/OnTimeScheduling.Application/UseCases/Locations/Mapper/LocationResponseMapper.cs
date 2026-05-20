@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Domain.Entities.Locations;
+﻿using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Entities.Locations;
 
 namespace OnTimeScheduling.Application.UseCases.Locations.Mapper;
 
