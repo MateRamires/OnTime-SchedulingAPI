@@ -53,15 +53,24 @@ public class Location : TenantEntity
         TimeZoneId = normalizedTimeZoneId;
     }
 
+    public void Update(string name, string address, string? timeZoneId = null)
+    {
+        SetName(name);
+        SetAddress(address);
+        SetTimeZoneId(timeZoneId);
+        Touch();
+    }
 
 
     public void Inactivate()
     {
         Status = RecordStatus.Inactive;
+        Touch();
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
+        Touch();
     }
 }

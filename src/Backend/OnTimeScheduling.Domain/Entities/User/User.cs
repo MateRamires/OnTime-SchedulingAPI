@@ -50,8 +50,7 @@ public class User : BaseEntity
         if (string.IsNullOrWhiteSpace(email))
             throw new DomainRuleException("Email is required.");
 
-        Email = email;
-
+        Email = email.Trim();
     }
 
     private void SetName(string name)
@@ -59,18 +58,35 @@ public class User : BaseEntity
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainRuleException("Name is required.");
 
-        Name = name;
-
+        Name = name.Trim();
     }
+
+    public void UpdateInternalProfile(string name, string email, UserRole role)
+    {
+        if (role == UserRole.SUPER_ADMIN)
+            throw new DomainRuleException("Super_Admin role cannot be assigned through company user management.");
+
+        if (CompanyId is null)
+            throw new DomainRuleException("Only company users can be updated through company user management.");
+
+        SetName(name);
+        SetEmail(email);
+        Role = role;
+        Touch();
+    }
+
+
 
     public void Inactivate() 
     {
         Status = RecordStatus.Inactive;
+        Touch();
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
+        Touch();
     }
 
     public void UpdatePasswordHash(string newHash)
