@@ -5,4 +5,5 @@ namespace OnTimeScheduling.Application.Repositories.Services;
 public interface IServiceWriteOnlyRepository
 {
     Task Add(Service service, CancellationToken ct = default);
+    void Update(Service service);
 }

@@ -42,6 +42,13 @@ public static class DependencyInjectionExtension
 
         services.AddScoped<ILinkProfessionalServiceUseCase, LinkProfessionalServiceUseCase>();
 
+        services.AddScoped<IGetServicesUseCase, GetServicesUseCase>();
+        services.AddScoped<IGetServiceByIdUseCase, GetServiceByIdUseCase>();
+        services.AddScoped<IUpdateServiceUseCase, UpdateServiceUseCase>();
+        services.AddScoped<IActivateServiceUseCase, ActivateServiceUseCase>();
+        services.AddScoped<IInactivateServiceUseCase, InactivateServiceUseCase>();
+        services.AddScoped<IUnlinkProfessionalServiceUseCase, UnlinkProfessionalServiceUseCase>();
+
         services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
 
         services.AddScoped<IRegisterAppointmentUseCase, RegisterAppointmentUseCase>();
