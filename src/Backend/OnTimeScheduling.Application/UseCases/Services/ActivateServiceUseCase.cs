@@ -4,7 +4,7 @@ using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Services;
 
-public class ActivateServiceUseCase
+public class ActivateServiceUseCase : IActivateServiceUseCase
 {
     private readonly IServiceReadOnlyRepository _serviceReadOnlyRepository;
     private readonly IServiceWriteOnlyRepository _serviceWriteOnlyRepository;

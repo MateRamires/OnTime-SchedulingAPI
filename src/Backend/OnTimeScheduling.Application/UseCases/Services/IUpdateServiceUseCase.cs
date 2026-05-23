@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Services;
+﻿using OnTimeScheduling.Communication.Requests;
+
+namespace OnTimeScheduling.Application.UseCases.Services;
 
 public interface IUpdateServiceUseCase
 {

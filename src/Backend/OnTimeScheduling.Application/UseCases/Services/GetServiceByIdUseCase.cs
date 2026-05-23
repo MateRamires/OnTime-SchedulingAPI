@@ -1,9 +1,11 @@
 ﻿using OnTimeScheduling.Application.Repositories.Services;
+using OnTimeScheduling.Application.UseCases.Services.Mapper;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Services;
 
-public class GetServiceByIdUseCase
+public class GetServiceByIdUseCase : IGetServiceByIdUseCase
 {
     private readonly IServiceReadOnlyRepository _serviceReadOnlyRepository;
 
