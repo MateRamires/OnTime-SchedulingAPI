@@ -26,15 +26,16 @@ public class LocationsController : OnTimeSchedulingController
 
     [HttpGet]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
-    [ProducesResponseType(typeof(List<ResponseLocationJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseLocationJson>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
         [FromServices] IGetLocationsUseCase useCase,
+        [FromQuery] RequestPaginationQuery pagination,
         [FromQuery] RecordStatus? status,
         [FromQuery] string? searchTerm,
         CancellationToken ct)
     {
-        var response = await useCase.ExecuteAsync(status, searchTerm, ct);
+        var response = await useCase.ExecuteAsync(pagination, status, searchTerm, ct);
         return Ok(response);
     }
 

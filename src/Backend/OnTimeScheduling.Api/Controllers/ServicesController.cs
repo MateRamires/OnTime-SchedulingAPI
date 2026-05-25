@@ -13,11 +13,12 @@ public class ServicesController : OnTimeSchedulingController
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     public async Task<IActionResult> GetAll(
         [FromServices] IGetServicesUseCase useCase,
+        [FromQuery] RequestPaginationQuery pagination,
         [FromQuery] RecordStatus? status,
         [FromQuery] string? searchTerm,
         CancellationToken ct)
     {
-        var response = await useCase.ExecuteAsync(status, searchTerm, ct);
+        var response = await useCase.ExecuteAsync(pagination, status, searchTerm, ct);
         return Ok(response);
     }
 

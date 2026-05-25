@@ -25,13 +25,14 @@ public class ClientsController : OnTimeSchedulingController
 
     [HttpGet]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
-    [ProducesResponseType(typeof(List<ResponseClientJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseClientJson>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
         [FromServices] IGetClientsUseCase useCase,
+        [FromQuery] RequestPaginationQuery pagination,
         CancellationToken ct)
     {
-        var response = await useCase.ExecuteAsync(ct);
+        var response = await useCase.ExecuteAsync(pagination, ct);
         return Ok(response);
     }
 

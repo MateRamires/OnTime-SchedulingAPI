@@ -23,16 +23,17 @@ public class UserController : OnTimeSchedulingController
 
     [HttpGet]
     [Authorize(Roles = "COMPANY_ADMIN")]
-    [ProducesResponseType(typeof(List<ResponseUserJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseUserJson>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
             [FromServices] IGetUsersUseCase useCase,
+            [FromQuery] RequestPaginationQuery pagination,
             [FromQuery] UserRole? role,
             [FromQuery] RecordStatus? status,
             [FromQuery] string? searchTerm,
             CancellationToken ct)
     {
-        var response = await useCase.ExecuteAsync(role, status, searchTerm, ct);
+        var response = await useCase.ExecuteAsync(pagination, role, status, searchTerm, ct);
         return Ok(response);
     }
 
