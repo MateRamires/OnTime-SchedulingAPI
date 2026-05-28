@@ -26,6 +26,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(config =>
 {
     config.SwaggerDoc("v1", new OpenApiInfo { Title = "On Time Scheduling API", Version = "v1" });
+    config.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 
     config.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
