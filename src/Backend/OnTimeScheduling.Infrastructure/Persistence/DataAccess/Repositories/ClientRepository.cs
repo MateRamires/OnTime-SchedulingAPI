@@ -46,13 +46,23 @@ public class ClientRepository : IClientWriteOnlyRepository, IClientReadOnlyRepos
 
     }
 
-    public Task<List<Client>> GetAllActiveAsync(CancellationToken ct = default)
+    public async Task<(List<Client> Items, int TotalItems)> GetAllActiveAsync(int skip, int take, CancellationToken ct = default)
     {
-        return _dbContext.Clients
+        var query = _dbContext.Clients
             .AsNoTracking()
-            .Where(c => c.Status == RecordStatus.Active)
+            .Where(c => c.Status == RecordStatus.Active);
+
+        var totalItems = await query.CountAsync(ct);
+
+        var items = await query
             .OrderBy(c => c.Name)
+            .ThenBy(c => c.Id)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(ct);
+
+        return (items, totalItems);
+
     }
 
 }

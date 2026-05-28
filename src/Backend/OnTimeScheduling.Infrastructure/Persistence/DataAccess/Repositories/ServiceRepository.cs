@@ -45,7 +45,7 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
              .FirstOrDefaultAsync(s => s.Id == id, ct);
     }
 
-    public async Task<List<Service>> GetAllAsync(RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
+    public async Task<(List<Service> Items, int TotalItems)> GetAllAsync(int skip, int take, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
     {
         var query = _dbContext.Services.AsNoTracking().AsQueryable();
 
@@ -60,7 +60,15 @@ public class ServiceRepository : IServiceWriteOnlyRepository, IServiceReadOnlyRe
                 (service.Description != null && service.Description.ToLower().Contains(normalized)));
         }
 
-        return await query.OrderBy(service => service.Name).ToListAsync(ct);
+        var totalItems = await query.CountAsync(ct);
+        var items = await query.OrderBy(service => service.Name)
+            .ThenBy(service => service.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(ct);
+
+        return (items, totalItems);
+
     }
 
     public Task<bool> ExistsWithNameExceptId(string name, Guid serviceId, CancellationToken ct = default)

@@ -64,7 +64,7 @@ public class LocationRepository : ILocationWriteOnlyRepository, ILocationReadOnl
             .FirstOrDefaultAsync(l => l.Id == locationId, ct);
     }
 
-    public Task<List<Location>> GetAllAsync(RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
+    public async Task<(List<Location> Items, int TotalItems)> GetAllAsync(int skip, int take, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
     {
         var query = _dbContext.Locations.AsNoTracking().AsQueryable();
 
@@ -79,9 +79,17 @@ public class LocationRepository : ILocationWriteOnlyRepository, ILocationReadOnl
                 location.Address.ToLower().Contains(normalizedSearchTerm));
         }
 
-        return query
+        var totalItems = await query.CountAsync(ct);
+
+        var items = await query
             .OrderBy(location => location.Name)
+            .ThenBy(location => location.Id)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(ct);
+
+        return (items, totalItems);
+
     }
 
 

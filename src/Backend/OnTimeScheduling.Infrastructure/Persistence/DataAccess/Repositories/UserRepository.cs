@@ -56,7 +56,7 @@ public sealed class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.Id == id && x.CompanyId == companyId, ct);
     }
 
-    public Task<List<User>> GetCompanyUsers(Guid companyId, UserRole? role = null, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
+    public async Task<(List<User> Items, int TotalItems)> GetCompanyUsers(Guid companyId, int skip, int take, UserRole? role = null, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
     {
         var query = _db.Users
             .AsNoTracking()
@@ -76,10 +76,18 @@ public sealed class UserRepository : IUserRepository
                 user.Email.ToLower().Contains(normalizedSearchTerm));
         }
 
-        return query
+        var totalItems = await query.CountAsync(ct);
+
+        var items = await query
             .OrderBy(user => user.Name)
             .ThenBy(user => user.Email)
+            .ThenBy(user => user.Id)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(ct);
+
+        return (items, totalItems);
+
     }
 
 

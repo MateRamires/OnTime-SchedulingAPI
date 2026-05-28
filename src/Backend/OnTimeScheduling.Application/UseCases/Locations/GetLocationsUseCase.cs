@@ -1,6 +1,7 @@
 ﻿using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.UseCases.Locations.Mapper;
+using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
@@ -18,14 +19,23 @@ public class GetLocationsUseCase : IGetLocationsUseCase
         _tenantProvider = tenantProvider;
     }
 
-    public async Task<List<ResponseLocationJson>> ExecuteAsync(RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
+    public async Task<ResponsePagedResultJson<ResponseLocationJson>> ExecuteAsync(RequestPaginationQuery pagination, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default)
     {
         _ = _tenantProvider.CompanyId
             ?? throw new DomainRuleException("It was not possible to identify the company for this user.");
 
-        var locations = await _locationReadRepository.GetAllAsync(status, searchTerm, ct);
+        var (locations, totalItems) = await _locationReadRepository.GetAllAsync(pagination.Skip, pagination.Size, status, searchTerm, ct);
+        var items = locations.Select(LocationResponseMapper.Map).ToList();
 
-        return locations.Select(LocationResponseMapper.Map).ToList();
+        return new ResponsePagedResultJson<ResponseLocationJson>
+        {
+            Page = pagination.Page,
+            Size = pagination.Size,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)pagination.Size),
+            Items = items
+        };
+
     }
 
 }
