@@ -52,8 +52,8 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             errors.Add("The authenticated user does not have a valid tenant context.");
 
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
-        if (service is null)
-            errors.Add("Service not found.");
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
 
         var locationTimeZoneId = await _locationReadOnlyRepository.GetActiveLocationTimeZoneIdById(request.LocationId, ct);
         if (locationTimeZoneId is null)

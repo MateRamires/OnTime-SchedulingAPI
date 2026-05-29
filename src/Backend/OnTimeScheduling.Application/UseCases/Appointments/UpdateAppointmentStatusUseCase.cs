@@ -36,6 +36,9 @@ public class UpdateAppointmentStatusUseCase : IUpdateAppointmentStatusUseCase
         if (loggedUser.Role == Domain.Enums.UserRole.PROVIDER && appointment.ProfessionalId != loggedUser.Id)
             throw new ErrorOnUnauthorizedException("Providers can only update their own appointments.");
 
+        if (appointment.EndTime > DateTime.UtcNow)
+            throw new ErrorOnValidationException(["Appointment outcome can only be updated after the appointment has ended."]);
+
         switch (request.Status)
         {
             case AppointmentOutcomeStatus.COMPLETED:

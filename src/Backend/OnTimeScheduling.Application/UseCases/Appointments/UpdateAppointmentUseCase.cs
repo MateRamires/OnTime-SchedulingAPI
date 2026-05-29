@@ -61,8 +61,9 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         if (appointment.Status != AppointmentStatus.Scheduled)
             throw new ErrorOnValidationException(["Only scheduled appointments can be edited."]);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
 
         var startTimeUtc = request.StartTime;
         var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
