@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application.UseCases.Users.Auth;
 using OnTimeScheduling.Application.UseCases.Users.Login;
 using OnTimeScheduling.Communication.Requests;
@@ -11,6 +13,8 @@ public class AuthController : OnTimeSchedulingController
     [HttpPost]
     [ProducesResponseType(typeof(ResponseLoginJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.AuthStrict)]
     public async Task<IActionResult> Login([FromServices] ILoginUseCase useCase, [FromBody] RequestLoginJson request, CancellationToken ct)
     {
         var response = await useCase.ExecuteAsync(request, ct);
@@ -20,6 +24,8 @@ public class AuthController : OnTimeSchedulingController
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(ResponseLoginJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.AuthStrict)]
     public async Task<IActionResult> Refresh([FromServices] IRefreshTokenUseCase useCase, [FromBody] RequestRefreshTokenJson request, CancellationToken ct)
     {
         var response = await useCase.ExecuteAsync(request, ct);

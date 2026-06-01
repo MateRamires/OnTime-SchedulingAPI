@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application.UseCases.Appointments;
 using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Communication.Requests;
@@ -32,6 +34,8 @@ public class AppointmentsController : OnTimeSchedulingController
     [ProducesResponseType(typeof(ResponseAvailableTimeSlotsJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
     public async Task<IActionResult> GetAvailableTimeSlots(
         [FromServices] IGetAvailableTimeSlotsUseCase useCase,
         [FromQuery] Guid professionalId,
@@ -105,6 +109,8 @@ public class AppointmentsController : OnTimeSchedulingController
     [HttpGet("agenda")]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
     public async Task<IActionResult> GetDailyAgenda(
         [FromServices] IGetDailyAgendaUseCase useCase,
         [FromQuery] RequestGetDailyAgendaJson request,
@@ -117,6 +123,8 @@ public class AppointmentsController : OnTimeSchedulingController
     [HttpGet("my-agenda")]
     [Authorize(Roles = "PROVIDER")]
     [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
     public async Task<IActionResult> GetMyAgenda(
         [FromServices] IGetMyAgendaUseCase useCase,
         [FromQuery] RequestGetMyAgendaJson request,

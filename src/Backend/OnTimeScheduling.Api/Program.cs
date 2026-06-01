@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnTimeScheduling.Api.Filters;
+using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application;
 using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Communication.Responses;
@@ -94,6 +95,8 @@ builder.Services.AddAuthentication(config =>
     };
 });
 
+builder.Services.AddApiRateLimiting(builder.Configuration);
+
 //Add Application's Dependency Injections
 builder.Services.AddApplication();
 
@@ -112,6 +115,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseRateLimiter();
