@@ -13,6 +13,40 @@ namespace OnTimeScheduling.Api.Controllers;
 
 public class AppointmentsController : OnTimeSchedulingController
 {
+    [HttpGet]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseAppointmentSummaryJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetAll(
+        [FromServices] IGetAppointmentsUseCase useCase,
+        [FromQuery] RequestGetAppointmentsJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponseAppointmentJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetById(
+        [FromServices] IGetAppointmentByIdUseCase useCase,
+        [FromRoute] Guid id,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(id, ct);
+
+        return Ok(response);
+    }
+
     [HttpPost]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(typeof(ResponseRegisterAppointmentJson), StatusCodes.Status201Created)]
