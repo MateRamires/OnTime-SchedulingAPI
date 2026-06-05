@@ -52,6 +52,8 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRegisterScheduleUseCase, RegisterScheduleUseCase>();
 
         services.AddScoped<IRegisterAppointmentUseCase, RegisterAppointmentUseCase>();
+        services.AddScoped<IGetAppointmentsUseCase, GetAppointmentsUseCase>();
+        services.AddScoped<IGetAppointmentByIdUseCase, GetAppointmentByIdUseCase>();
         services.AddScoped<IGetAvailableTimeSlotsUseCase, GetAvailableTimeSlotsUseCase>();
         services.AddScoped<ICancelAppointmentUseCase, CancelAppointmentUseCase>();
         services.AddScoped<IUpdateAppointmentUseCase, UpdateAppointmentUseCase>();

@@ -32,4 +32,19 @@ public interface IAppointmentReadOnlyRepository
         AppointmentStatus? status,
         CancellationToken ct = default);
 
+    Task<AppointmentDetails?> GetAppointmentDetailsByIdAsync(Guid id, CancellationToken ct = default);
+
+    Task<(List<AppointmentDetails> Items, int TotalItems)> GetAppointmentsAsync(
+        int skip,
+        int take,
+        Guid? locationId,
+        Guid? professionalId,
+        Guid? clientId,
+        Guid? serviceId,
+        IReadOnlyCollection<AppointmentStatus>? statuses,
+        DateTime? startTimeUtc,
+        DateTime? endTimeUtc,
+        CancellationToken ct = default);
+
+
 }
