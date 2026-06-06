@@ -1,4 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using CommunicationAppointmentStatus = OnTimeScheduling.Communication.Enums.AppointmentStatus;
+using OnTimeScheduling.Communication.Responses.Appointments;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments.Mapper;
 

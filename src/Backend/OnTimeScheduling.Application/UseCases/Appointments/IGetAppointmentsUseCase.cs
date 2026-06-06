@@ -1,4 +1,6 @@
-﻿using OnTimeScheduling.Communication.Responses;
+﻿using OnTimeScheduling.Communication.Requests.Appointments;
+using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Communication.Responses.Appointments;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
 

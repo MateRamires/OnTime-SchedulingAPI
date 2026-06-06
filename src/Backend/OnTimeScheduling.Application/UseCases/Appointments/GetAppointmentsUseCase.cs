@@ -1,7 +1,11 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Application.UseCases.Appointments.Mapper;
+using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Communication.Responses.Appointments;
 using OnTimeScheduling.Exceptions.ExceptionBase;
+using DomainAppointmentStatus = OnTimeScheduling.Domain.Enums.AppointmentStatus;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;
 

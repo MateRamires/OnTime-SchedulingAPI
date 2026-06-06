@@ -1,5 +1,7 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Application.UseCases.Appointments.Mapper;
+using OnTimeScheduling.Communication.Responses.Appointments;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.Appointments;

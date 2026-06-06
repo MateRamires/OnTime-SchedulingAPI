@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.Appointments;
+﻿using OnTimeScheduling.Communication.Responses.Appointments;
+
+namespace OnTimeScheduling.Application.UseCases.Appointments;
 
 public interface IGetAppointmentByIdUseCase
 {
