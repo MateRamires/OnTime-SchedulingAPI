@@ -1,6 +1,7 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
@@ -25,6 +26,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
+    private readonly IScheduleBlockReadOnlyRepository _scheduleBlockReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -37,6 +39,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
+        IScheduleBlockReadOnlyRepository scheduleBlockReadRepository,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -48,6 +51,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _scheduleReadRepository = scheduleReadRepository;
+        _scheduleBlockReadRepository = scheduleBlockReadRepository;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -129,6 +133,16 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 
         if (isTimeSlotTaken)
             throw new ConflictException("The selected time slot is no longer available due to an overlapping appointment.");
+
+        var isBlocked = await _scheduleBlockReadRepository.HasOverlappingBlockForAppointmentAsync(
+            request.ProfessionalId,
+            request.LocationId,
+            startTimeUtc,
+            calculatedEndTime,
+            ct);
+
+        if (isBlocked)
+            throw new ConflictException("The selected time slot is blocked by a schedule block.");
 
         if (locationTimeZoneId is not null)
         {
