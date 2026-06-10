@@ -1,5 +1,8 @@
 ﻿using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Application.UseCases.ScheduleBlocks.Mapper;
+using OnTimeScheduling.Application.Validators.ScheduleBlocks;
+using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 

@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;
+﻿using OnTimeScheduling.Communication.Responses;
+
+namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;
 
 public interface IGetScheduleBlockByIdUseCase
 {

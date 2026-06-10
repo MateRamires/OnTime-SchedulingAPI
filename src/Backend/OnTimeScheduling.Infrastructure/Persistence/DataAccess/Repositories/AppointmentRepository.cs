@@ -73,6 +73,34 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
             .ToListAsync(ct);
     }
 
+    public async Task<bool> HasOverlappingAppointmentForBlockAsync(
+        Guid? professionalId,
+        Guid? locationId,
+        DateTime startTimeUtc,
+        DateTime endTimeUtc,
+        CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        var query = _dbContext.Appointments
+            .AsNoTracking()
+            .Where(a =>
+                a.Status != AppointmentStatus.Canceled &&
+                a.EndTime > nowUtc &&
+                a.StartTime < endTimeUtc &&
+                a.EndTime > startTimeUtc);
+
+        if (professionalId.HasValue)
+            query = query.Where(a => a.ProfessionalId == professionalId.Value);
+
+        if (locationId.HasValue)
+            query = query.Where(a => a.LocationId == locationId.Value);
+
+        return await query.AnyAsync(ct);
+    }
+
+
+
     public async Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _dbContext.Appointments

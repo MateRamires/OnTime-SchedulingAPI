@@ -1,4 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
+using OnTimeScheduling.Application.UseCases.ScheduleBlocks.Mapper;
+using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;

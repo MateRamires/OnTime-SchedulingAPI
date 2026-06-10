@@ -1,4 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
+using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Domain.Entities.ScheduleBlocks;
 
 namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks.Mapper;
 

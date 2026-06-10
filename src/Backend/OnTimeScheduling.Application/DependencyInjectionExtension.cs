@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Application.UseCases.Clients;
 using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;
+using OnTimeScheduling.Application.UseCases.ScheduleBlocks;
 using OnTimeScheduling.Application.UseCases.Schedules;
 using OnTimeScheduling.Application.UseCases.Services;
 using OnTimeScheduling.Application.UseCases.Users.Auth;

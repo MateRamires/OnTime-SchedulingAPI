@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.Repositories.ScheduleBlocks;
+﻿using OnTimeScheduling.Domain.Entities.ScheduleBlocks;
+
+namespace OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 
 public interface IScheduleBlockReadOnlyRepository
 {

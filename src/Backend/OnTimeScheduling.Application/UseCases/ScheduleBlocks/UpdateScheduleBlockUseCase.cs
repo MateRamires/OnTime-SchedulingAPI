@@ -5,6 +5,9 @@ using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Tenant;
+using OnTimeScheduling.Application.Validators.ScheduleBlocks;
+using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Domain.Enums;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;

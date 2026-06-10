@@ -7,6 +7,7 @@ using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
 using OnTimeScheduling.Domain.Entities.Locations;
+using OnTimeScheduling.Domain.Entities.ScheduleBlocks;
 using OnTimeScheduling.Domain.Entities.Schedules;
 using OnTimeScheduling.Domain.Entities.Services;
 using OnTimeScheduling.Domain.Entities.User;
@@ -27,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<ProfessionalSchedule> ProfessionalSchedules => Set<ProfessionalSchedule>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<ScheduleBlock> ScheduleBlocks => Set<ScheduleBlock>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options, ITenantProvider tenantProvider) : base(options)
     {

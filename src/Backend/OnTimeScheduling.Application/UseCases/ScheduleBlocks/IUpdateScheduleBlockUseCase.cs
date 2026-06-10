@@ -1,4 +1,6 @@
-﻿namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;
+﻿using OnTimeScheduling.Communication.Requests;
+
+namespace OnTimeScheduling.Application.UseCases.ScheduleBlocks;
 
 public interface IUpdateScheduleBlockUseCase
 {
