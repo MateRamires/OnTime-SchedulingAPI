@@ -7,6 +7,7 @@ public class RegisterAppointmentValidator : AbstractValidator<RequestRegisterApp
 {
     public RegisterAppointmentValidator() 
     {
+        RuleFor(a => a.ClientId).NotEmpty().WithMessage("Client ID is required.");
         RuleFor(a => a.ProfessionalId).NotEmpty().WithMessage("Professional ID is required.");
         RuleFor(a => a.ServiceId).NotEmpty().WithMessage("Service ID is required.");
         RuleFor(a => a.LocationId).NotEmpty().WithMessage("Location ID is required.");

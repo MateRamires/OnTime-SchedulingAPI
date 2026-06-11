@@ -60,8 +60,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     {
         ValidateBasicFields(request);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
+
 
         var startTimeUtc = request.StartTime;
         var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);

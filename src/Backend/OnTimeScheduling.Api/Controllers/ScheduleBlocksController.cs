@@ -6,7 +6,7 @@ using OnTimeScheduling.Communication.Responses;
 
 namespace OnTimeScheduling.Api.Controllers;
 
-public class ScheduleBlocksController : Controller
+public class ScheduleBlocksController : OnTimeSchedulingController
 {
     [HttpPost]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
