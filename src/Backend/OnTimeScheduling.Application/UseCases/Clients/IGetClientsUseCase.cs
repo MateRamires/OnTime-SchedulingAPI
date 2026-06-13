@@ -1,8 +1,9 @@
-﻿using OnTimeScheduling.Communication.Responses;
+﻿using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Responses;
 
 namespace OnTimeScheduling.Application.UseCases.Clients;
 
 public interface IGetClientsUseCase
 {
-    Task<List<ResponseClientJson>> ExecuteAsync(CancellationToken ct = default);
+    Task<ResponsePagedResultJson<ResponseClientJson>> ExecuteAsync(RequestPaginationQuery pagination, CancellationToken ct = default);
 }

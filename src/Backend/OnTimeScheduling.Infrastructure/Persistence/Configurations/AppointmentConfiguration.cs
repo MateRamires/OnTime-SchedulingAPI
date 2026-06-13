@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OnTimeScheduling.Domain.Entities.Appointments;
+using OnTimeScheduling.Domain.Entities.Clients;
 using OnTimeScheduling.Domain.Entities.Company;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.Configurations;
@@ -22,12 +23,10 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.Property(x => x.Id).HasColumnName("id");
 
         builder.Property(x => x.CompanyId).HasColumnName("company_id").IsRequired();
+        builder.Property(x => x.ClientId).HasColumnName("client_id").IsRequired();
         builder.Property(x => x.ProfessionalId).HasColumnName("professional_id").IsRequired();
         builder.Property(x => x.ServiceId).HasColumnName("service_id").IsRequired();
         builder.Property(x => x.LocationId).HasColumnName("location_id").IsRequired();
-
-        builder.Property(x => x.ClientName).HasColumnName("client_name").HasMaxLength(150).IsRequired();
-        builder.Property(x => x.ClientPhone).HasColumnName("client_phone").HasMaxLength(20).IsRequired();
 
         builder.Property(x => x.StartTime).HasColumnName("start_time").HasColumnType("timestamp with time zone").IsRequired();
         builder.Property(x => x.EndTime).HasColumnName("end_time").HasColumnType("timestamp with time zone").IsRequired();
@@ -40,6 +39,11 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.HasOne<Company>()
             .WithMany()
             .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Client>()
+            .WithMany()
+            .HasForeignKey(x => x.ClientId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Professional)
@@ -64,6 +68,10 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         // By location + time range (location/day view)
         builder.HasIndex(x => new { x.CompanyId, x.LocationId, x.StartTime })
             .HasDatabaseName("ix_appointments_company_location_start");
+
+        // By client + time range (history / client timeline)
+        builder.HasIndex(x => new { x.CompanyId, x.ClientId, x.StartTime })
+            .HasDatabaseName("ix_appointments_company_client_start");
 
         // Company-wide timeline (day/week view)
         builder.HasIndex(x => new { x.CompanyId, x.StartTime })

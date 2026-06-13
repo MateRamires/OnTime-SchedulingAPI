@@ -2,9 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Auth;
 using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
@@ -65,11 +67,26 @@ public static class DependencyInjenctionExtension
         services.AddScoped<IAppointmentReadOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
         services.AddScoped<IAppointmentWriteOnlyRepository>(sp => sp.GetRequiredService<AppointmentRepository>());
 
+        //Schedule Block Repository
+        services.AddScoped<ScheduleBlockRepository>();
+        services.AddScoped<IScheduleBlockReadOnlyRepository>(sp => sp.GetRequiredService<ScheduleBlockRepository>());
+        services.AddScoped<IScheduleBlockWriteOnlyRepository>(sp => sp.GetRequiredService<ScheduleBlockRepository>());
+
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IPasswordHashService, PasswordHashService>();
 
         services.AddScoped<ITenantProvider, TenantProvider>();
+
+        services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddScoped<IRefreshTokenSettings>(sp =>
+        {
+            var expirationDays = configuration.GetValue<uint>("Settings:Jwt:RefreshExpirationDays");
+            return new RefreshTokenSettings(expirationDays);
+        });
+
 
         services.AddHttpContextAccessor();
 

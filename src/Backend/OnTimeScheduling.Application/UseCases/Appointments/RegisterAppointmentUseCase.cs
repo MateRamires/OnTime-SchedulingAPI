@@ -1,5 +1,7 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
@@ -18,11 +20,13 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 {
     private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
+    private readonly IClientReadOnlyRepository _clientReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
+    private readonly IScheduleBlockReadOnlyRepository _scheduleBlockReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -30,20 +34,24 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         IAppointmentWriteOnlyRepository appointmentWriteRepository,
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IServiceReadOnlyRepository serviceReadRepository,
+        IClientReadOnlyRepository clientReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
+        IScheduleBlockReadOnlyRepository scheduleBlockReadRepository,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
         _appointmentWriteRepository = appointmentWriteRepository;
         _appointmentReadRepository = appointmentReadRepository;
         _serviceReadRepository = serviceReadRepository;
+        _clientReadRepository = clientReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _scheduleReadRepository = scheduleReadRepository;
+        _scheduleBlockReadRepository = scheduleBlockReadRepository;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -52,11 +60,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
     {
         ValidateBasicFields(request);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
 
-        var sanitizedClientName = request.ClientName.Trim();
-        var sanitizedClientPhone = request.ClientPhone.Trim();
 
         var startTimeUtc = request.StartTime;
         var endTime = startTimeUtc.AddMinutes(service.DurationInMinutes);
@@ -64,11 +71,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         await ValidateBusinessRulesAsync(request, startTimeUtc, endTime, ct);
 
         var appointment = new Appointment(
+            clientId: request.ClientId,
             professionalId: request.ProfessionalId,
             serviceId: request.ServiceId,
             locationId: request.LocationId,
-            clientName: sanitizedClientName,
-            clientPhone: sanitizedClientPhone,
             startTime: startTimeUtc,
             endTime: endTime 
         );
@@ -94,7 +100,7 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
         }
     }
 
-    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request,DateTime startTimeUtc,DateTime calculatedEndTime, CancellationToken ct)
+    private async Task ValidateBusinessRulesAsync(RequestRegisterAppointmentJson request, DateTime startTimeUtc, DateTime calculatedEndTime, CancellationToken ct)
     {
         var errors = new List<string>();
 
@@ -103,6 +109,10 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
 
         if (_tenantProvider.CompanyId.HasValue)
         {
+            var client = await _clientReadRepository.GetByIdAsync(request.ClientId, ct);
+            if (client is null)
+                errors.Add("Client not found in this tenant.");
+
             var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
             if (professional is null)
                 errors.Add("Professional not found in this tenant.");
@@ -124,7 +134,17 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
             .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct);
 
         if (isTimeSlotTaken)
-            errors.Add("The selected time slot is no longer available.");
+            throw new ConflictException("The selected time slot is no longer available due to an overlapping appointment.");
+
+        var isBlocked = await _scheduleBlockReadRepository.HasOverlappingBlockForAppointmentAsync(
+            request.ProfessionalId,
+            request.LocationId,
+            startTimeUtc,
+            calculatedEndTime,
+            ct);
+
+        if (isBlocked)
+            throw new ConflictException("The selected time slot is blocked by a schedule block.");
 
         if (locationTimeZoneId is not null)
         {
@@ -172,9 +192,6 @@ public class RegisterAppointmentUseCase : IRegisterAppointmentUseCase
                 }
             }
         }
-
-
-
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
     }

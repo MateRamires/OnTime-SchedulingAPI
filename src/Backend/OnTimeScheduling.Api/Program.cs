@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnTimeScheduling.Api.Filters;
+using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application;
 using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Communication.Responses;
@@ -25,7 +26,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(config =>
 {
-    config.SwaggerDoc("v1", new OpenApiInfo { Title = "On Time Scheduling API", Version = "v1" });
+    config.SwaggerDoc("v1", new OpenApiInfo { Title = "OnTime Scheduling API", Version = "v1" });
+    config.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 
     config.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -93,6 +95,8 @@ builder.Services.AddAuthentication(config =>
     };
 });
 
+builder.Services.AddApiRateLimiting(builder.Configuration);
+
 //Add Application's Dependency Injections
 builder.Services.AddApplication();
 
@@ -112,7 +116,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();

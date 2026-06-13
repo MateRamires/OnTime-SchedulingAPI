@@ -30,17 +30,9 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("ClientName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("client_name");
-
-                    b.Property<string>("ClientPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("client_phone");
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid")
@@ -80,6 +72,8 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId");
+
                     b.HasIndex("LocationId");
 
                     b.HasIndex("ProfessionalId");
@@ -88,6 +82,9 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CompanyId", "StartTime")
                         .HasDatabaseName("ix_appointments_company_start");
+
+                    b.HasIndex("CompanyId", "ClientId", "StartTime")
+                        .HasDatabaseName("ix_appointments_company_client_start");
 
                     b.HasIndex("CompanyId", "LocationId", "StartTime")
                         .HasDatabaseName("ix_appointments_company_location_start");
@@ -99,6 +96,42 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_appointments_start_before_end", "start_time < end_time");
                         });
+                });
+
+            modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Auth.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("refresh_tokens", (string)null);
                 });
 
             modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Clients.Client", b =>
@@ -258,6 +291,70 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                     b.HasIndex("CompanyId", "Status");
 
                     b.ToTable("locations", (string)null);
+                });
+
+            modelBuilder.Entity("OnTimeScheduling.Domain.Entities.ScheduleBlocks.ScheduleBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_time");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<Guid?>("ProfessionalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("professional_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_time");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("ProfessionalId");
+
+                    b.HasIndex("CompanyId", "LocationId", "StartTime")
+                        .HasDatabaseName("ix_schedule_blocks_company_location_start");
+
+                    b.HasIndex("CompanyId", "ProfessionalId", "StartTime")
+                        .HasDatabaseName("ix_schedule_blocks_company_professional_start");
+
+                    b.HasIndex("CompanyId", "StartTime", "EndTime")
+                        .HasDatabaseName("ix_schedule_blocks_company_time_range");
+
+                    b.ToTable("schedule_blocks", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_schedule_blocks_has_scope", "professional_id IS NOT NULL OR location_id IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_schedule_blocks_start_before_end", "start_time < end_time");
+                        });
                 });
 
             modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Schedules.ProfessionalSchedule", b =>
@@ -474,6 +571,12 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Appointments.Appointment", b =>
                 {
+                    b.HasOne("OnTimeScheduling.Domain.Entities.Clients.Client", null)
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("OnTimeScheduling.Domain.Entities.Company.Company", null)
                         .WithMany()
                         .HasForeignKey("CompanyId")
@@ -505,6 +608,15 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Auth.RefreshToken", b =>
+                {
+                    b.HasOne("OnTimeScheduling.Domain.Entities.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Clients.Client", b =>
                 {
                     b.HasOne("OnTimeScheduling.Domain.Entities.Company.Company", null)
@@ -521,6 +633,29 @@ namespace OnTimeScheduling.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("OnTimeScheduling.Domain.Entities.ScheduleBlocks.ScheduleBlock", b =>
+                {
+                    b.HasOne("OnTimeScheduling.Domain.Entities.Company.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OnTimeScheduling.Domain.Entities.Locations.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OnTimeScheduling.Domain.Entities.User.User", "Professional")
+                        .WithMany()
+                        .HasForeignKey("ProfessionalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Location");
+
+                    b.Navigation("Professional");
                 });
 
             modelBuilder.Entity("OnTimeScheduling.Domain.Entities.Schedules.ProfessionalSchedule", b =>

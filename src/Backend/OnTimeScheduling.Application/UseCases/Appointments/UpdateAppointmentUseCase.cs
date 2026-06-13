@@ -1,6 +1,8 @@
 ﻿
 using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
@@ -17,11 +19,13 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 {
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IAppointmentWriteOnlyRepository _appointmentWriteRepository;
+    private readonly IClientReadOnlyRepository _clientReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
+    private readonly IScheduleBlockReadOnlyRepository _scheduleBlockReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -29,10 +33,12 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IAppointmentWriteOnlyRepository appointmentWriteRepository,
         IServiceReadOnlyRepository serviceReadRepository,
+        IClientReadOnlyRepository clientReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
+        IScheduleBlockReadOnlyRepository scheduleBlockReadRepository,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -40,9 +46,11 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         _appointmentWriteRepository = appointmentWriteRepository;
         _serviceReadRepository = serviceReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
+        _clientReadRepository = clientReadRepository;
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _scheduleReadRepository = scheduleReadRepository;
+        _scheduleBlockReadRepository = scheduleBlockReadRepository;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -57,22 +65,20 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         if (appointment.Status != AppointmentStatus.Scheduled)
             throw new ErrorOnValidationException(["Only scheduled appointments can be edited."]);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
 
-        var sanitizedClientName = request.ClientName.Trim();
-        var sanitizedClientPhone = request.ClientPhone.Trim();
         var startTimeUtc = request.StartTime;
         var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
         await ValidateBusinessRulesAsync(appointmentId, request, startTimeUtc, endTimeUtc, ct);
 
         appointment.Reschedule(
+            request.ClientId,
             request.ProfessionalId,
             request.ServiceId,
             request.LocationId,
-            sanitizedClientName,
-            sanitizedClientPhone,
             startTimeUtc,
             endTimeUtc);
 
@@ -106,6 +112,10 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 
         if (_tenantProvider.CompanyId.HasValue)
         {
+            var client = await _clientReadRepository.GetByIdAsync(request.ClientId, ct);
+            if (client is null)
+                errors.Add("Client not found in this tenant.");
+
             var professional = await _userRepository.GetByIdAndCompany(request.ProfessionalId, _tenantProvider.CompanyId.Value, ct);
             if (professional is null)
                 errors.Add("Professional not found in this tenant.");
@@ -127,7 +137,18 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
             .HasOverlappingAppointment(request.ProfessionalId, startTimeUtc, calculatedEndTime, ct, appointmentId);
 
         if (isTimeSlotTaken)
-            errors.Add("The selected time slot is no longer available.");
+            throw new ConflictException("The selected time slot is no longer available due to an overlapping appointment.");
+
+        var isBlocked = await _scheduleBlockReadRepository.HasOverlappingBlockForAppointmentAsync(
+            request.ProfessionalId,
+            request.LocationId,
+            startTimeUtc,
+            calculatedEndTime,
+            ct);
+
+        if (isBlocked)
+            throw new ConflictException("The selected time slot is blocked by a schedule block.");
+
 
         if (locationTimeZoneId is not null)
         {
@@ -179,5 +200,4 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         if (errors.Count != 0)
             throw new ErrorOnValidationException(errors);
     }
-
 }

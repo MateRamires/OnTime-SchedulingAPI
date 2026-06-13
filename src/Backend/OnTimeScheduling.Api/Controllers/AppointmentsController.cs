@@ -1,17 +1,57 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application.UseCases.Appointments;
+using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Communication.Responses.Appointments;
 
 namespace OnTimeScheduling.Api.Controllers;
 
 public class AppointmentsController : OnTimeSchedulingController
 {
+    [HttpGet]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseAppointmentSummaryJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetAll(
+        [FromServices] IGetAppointmentsUseCase useCase,
+        [FromQuery] RequestGetAppointmentsJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponseAppointmentJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetById(
+        [FromServices] IGetAppointmentByIdUseCase useCase,
+        [FromRoute] Guid id,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(id, ct);
+
+        return Ok(response);
+    }
+
     [HttpPost]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(typeof(ResponseRegisterAppointmentJson), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Register(
         [FromServices] IRegisterAppointmentUseCase useCase,
@@ -28,6 +68,8 @@ public class AppointmentsController : OnTimeSchedulingController
     [ProducesResponseType(typeof(ResponseAvailableTimeSlotsJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
     public async Task<IActionResult> GetAvailableTimeSlots(
         [FromServices] IGetAvailableTimeSlotsUseCase useCase,
         [FromQuery] Guid professionalId,
@@ -53,6 +95,7 @@ public class AppointmentsController : OnTimeSchedulingController
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
         [FromServices] IUpdateAppointmentUseCase useCase,
@@ -96,5 +139,34 @@ public class AppointmentsController : OnTimeSchedulingController
 
         return NoContent();
     }
+
+    [HttpGet("agenda")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetDailyAgenda(
+        [FromServices] IGetDailyAgendaUseCase useCase,
+        [FromQuery] RequestGetDailyAgendaJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+        return Ok(response);
+    }
+
+    [HttpGet("my-agenda")]
+    [Authorize(Roles = "PROVIDER")]
+    [ProducesResponseType(typeof(ResponseAgendaJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetMyAgenda(
+        [FromServices] IGetMyAgendaUseCase useCase,
+        [FromQuery] RequestGetMyAgendaJson request,
+        CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(request, ct);
+        return Ok(response);
+    }
+
 
 }

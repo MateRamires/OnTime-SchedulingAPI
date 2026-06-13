@@ -26,6 +26,8 @@ public class ExceptionFilter : IExceptionFilter
 
             NotFoundException ex => new NotFoundObjectResult(new ResponseErrorJson(ex.Message, traceId)),
 
+            ConflictException ex => new ConflictObjectResult(new ResponseErrorJson(ex.Message, traceId)),
+
             DomainRuleException ex => new BadRequestObjectResult(new ResponseErrorJson(ex.Message, traceId)),
 
             ErrorOnUnauthorizedException or InvalidLoginException

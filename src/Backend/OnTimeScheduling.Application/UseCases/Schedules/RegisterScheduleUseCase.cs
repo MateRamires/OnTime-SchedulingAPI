@@ -94,7 +94,7 @@ public class RegisterScheduleUseCase : IRegisterScheduleUseCase
         {
             result.Errors.Add(new FluentValidation.Results.ValidationFailure(
                 string.Empty,
-                "This schedule block overlaps with an existing schedule for this professional on the selected day."));
+                "This schedule overlaps with an existing schedule for this professional on the selected day."));
         }
 
         if (!result.IsValid)

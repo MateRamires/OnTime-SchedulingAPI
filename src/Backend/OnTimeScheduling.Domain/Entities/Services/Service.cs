@@ -53,6 +53,16 @@ public class Service : TenantEntity
         DurationInMinutes = durationInMinutes;
     }
 
+    public void Update(string name, string? description, decimal price, int durationInMinutes)
+    {
+        SetName(name);
+        SetDescription(description);
+        SetPrice(price);
+        SetDuration(durationInMinutes);
+    }
+
+
+
     public void Inactivate()
     {
         Status = RecordStatus.Inactive;

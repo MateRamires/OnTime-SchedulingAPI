@@ -1,5 +1,6 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.Users;
@@ -17,6 +18,7 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
     private readonly IProfessionalServiceReadOnlyRepository _professionalServiceReadRepository;
+    private readonly IScheduleBlockReadOnlyRepository _scheduleBlockReadRepository;
     private readonly IServiceReadOnlyRepository _serviceReadRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly IUserRepository _userRepository;
@@ -28,6 +30,7 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
         IServiceReadOnlyRepository serviceReadRepository,
         IProfessionalServiceReadOnlyRepository professionalServiceReadRepository,
+        IScheduleBlockReadOnlyRepository scheduleBlockReadRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
         IUserRepository userRepository,
         ITenantProvider tenantProvider)
@@ -35,6 +38,7 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         _appointmentReadRepository = appointmentReadRepository;
         _scheduleReadRepository = scheduleReadRepository;
         _serviceReadRepository = serviceReadRepository;
+        _scheduleBlockReadRepository = scheduleBlockReadRepository;
         _professionalServiceReadRepository = professionalServiceReadRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _userRepository = userRepository;
@@ -52,8 +56,8 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
             errors.Add("The authenticated user does not have a valid tenant context.");
 
         var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
-        if (service is null)
-            errors.Add("Service not found.");
+        if (service is null || service.Status != RecordStatus.Active)
+            throw new NotFoundException("Service not found.");
 
         var locationTimeZoneId = await _locationReadOnlyRepository.GetActiveLocationTimeZoneIdById(request.LocationId, ct);
         if (locationTimeZoneId is null)
@@ -98,6 +102,10 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
         var appointments = await _appointmentReadRepository.GetAppointmentsByDateRangeAsync(
             request.ProfessionalId, utcStartOfDay, utcEndOfDay, ct);
 
+        var scheduleBlocks = await _scheduleBlockReadRepository.GetOverlappingBlocksForAppointmentAsync(
+           request.ProfessionalId, request.LocationId, utcStartOfDay, utcEndOfDay, ct);
+
+
         var availableSlotsUtc = new HashSet<DateTime>();
         var serviceDuration = TimeSpan.FromMinutes(service!.DurationInMinutes);
         var nowUtc = DateTime.UtcNow;
@@ -120,11 +128,15 @@ public class GetAvailableTimeSlotsUseCase : IGetAvailableTimeSlotsUseCase
                     if (slotUtcStart <= nowUtc)
                         continue;
 
-                    var hasOverlap = appointments.Any(a =>
+                    var hasAppointmentOverlap = appointments.Any(a =>
                         slotUtcStart < a.EndTime &&
                         slotUtcEnd > a.StartTime);
 
-                    if (!hasOverlap)
+                    var hasScheduleBlockOverlap = scheduleBlocks.Any(b =>
+                        slotUtcStart < b.EndTime &&
+                        slotUtcEnd > b.StartTime);
+
+                    if (!hasAppointmentOverlap && !hasScheduleBlockOverlap)
                         availableSlotsUtc.Add(slotUtcStart);
                     
                 }

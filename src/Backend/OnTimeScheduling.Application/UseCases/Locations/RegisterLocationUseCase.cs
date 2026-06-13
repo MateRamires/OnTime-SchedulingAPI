@@ -27,6 +27,7 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
     {
         request.Name = request.Name.FormatName();
         request.Address = request.Address?.Trim() ?? string.Empty;
+        request.TimeZoneId = string.IsNullOrWhiteSpace(request.TimeZoneId) ? null : request.TimeZoneId.Trim();
 
         await Validate(request, ct);
 
@@ -41,7 +42,7 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
         );
 
         await _repository.Add(location, ct);
-        await _unitOfWork.Commit();
+        await _unitOfWork.Commit(ct);
 
         return new ResponseRegisterLocationJson
         {
@@ -62,7 +63,7 @@ public class RegisterLocationUseCase : IRegisterLocationUseCase
 
         if (currentCompanyId.HasValue)
         {
-            var nameExists = await _readRepository.ExistsActiveLocationWithName(request.Name, currentCompanyId.Value, ct);
+            var nameExists = await _readRepository.ExistsLocationWithName(request.Name, currentCompanyId.Value, ct);
             if (nameExists)
                 result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "A location with this name already exists in your company."));
             

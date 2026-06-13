@@ -5,4 +5,5 @@ namespace OnTimeScheduling.Application.Repositories.Locations;
 public interface ILocationWriteOnlyRepository
 {
     Task Add(Location location, CancellationToken cancellationToken);
+    void Update(Location location);
 }
