@@ -32,6 +32,20 @@ public class ProfessionalSchedule : TenantEntity
         SetTimes(startTime, endTime);
     }
 
+    public void Update(
+        Guid userId,
+        Guid locationId,
+        DayOfWeek dayOfWeek,
+        TimeSpan startTime,
+        TimeSpan endTime)
+    {
+        SetTimes(startTime, endTime);
+
+        UserId = userId;
+        LocationId = locationId;
+        DayOfWeek = dayOfWeek;
+    }
+
     private void SetTimes(TimeSpan start, TimeSpan end)
     {
         if (start >= end)
