@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Application.Repositories.Auth;
+using OnTimeScheduling.Application.Repositories.Auth;
+using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
@@ -19,8 +20,17 @@ public class LoginUseCase : ILoginUseCase
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IRefreshTokenSettings _refreshTokenSettings;
+    private readonly ICompanyReadOnlyRepository _companyReadRepository;
 
-    public LoginUseCase(IUserRepository userRepository, IPasswordHashService passwordHashService, IAccessTokenGenerator accessTokenGenerator, IUnitOfWork unitOfWork, IRefreshTokenRepository refreshTokenRepository, IRefreshTokenGenerator refreshTokenGenerator, IRefreshTokenSettings refreshTokenSettings)
+    public LoginUseCase(
+        IUserRepository userRepository,
+        IPasswordHashService passwordHashService,
+        IAccessTokenGenerator accessTokenGenerator,
+        IUnitOfWork unitOfWork,
+        IRefreshTokenRepository refreshTokenRepository,
+        IRefreshTokenGenerator refreshTokenGenerator,
+        IRefreshTokenSettings refreshTokenSettings,
+        ICompanyReadOnlyRepository companyReadRepository)
     {
         _userRepository = userRepository;
         _passwordHashService = passwordHashService;
@@ -29,6 +39,7 @@ public class LoginUseCase : ILoginUseCase
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenGenerator = refreshTokenGenerator;
         _refreshTokenSettings = refreshTokenSettings;
+        _companyReadRepository = companyReadRepository;
     }
 
     public async Task<ResponseLoginJson> ExecuteAsync(RequestLoginJson request, CancellationToken ct = default)
@@ -39,6 +50,11 @@ public class LoginUseCase : ILoginUseCase
         var user = await _userRepository.GetByEmail(request.Email, ct);
 
         if (user is null)
+        {
+            throw new InvalidLoginException("Invalid credentials.");
+        }
+
+        if (user.CompanyId.HasValue && !await _companyReadRepository.IsCompanyActive(user.CompanyId.Value, ct))
         {
             throw new InvalidLoginException("Invalid credentials.");
         }
@@ -66,7 +82,6 @@ public class LoginUseCase : ILoginUseCase
         await _refreshTokenRepository.RevokeActiveTokensByUserIdAsync(user.Id, ct);
         await _refreshTokenRepository.AddAsync(new Domain.Entities.Auth.RefreshToken(user.Id, _refreshTokenGenerator.Hash(refreshToken), DateTime.UtcNow.AddDays(_refreshTokenSettings.ExpirationDays)), ct);
         await _unitOfWork.Commit(ct);
-
 
         return new ResponseLoginJson
         {

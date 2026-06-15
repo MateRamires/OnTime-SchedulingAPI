@@ -60,11 +60,12 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
         await _companyRepository.Add(company, ct);
         await _userRepository.Add(userAdmin, ct);
 
-        await _unitOfWork.Commit();
+        await _unitOfWork.Commit(ct);
 
 
         return new ResponseRegisterCompanyJson
         {
+            Id = company.Id,
             Name = company.FantasyName
         };
     }
@@ -78,7 +79,7 @@ public class RegisterCompanyUseCase : IRegisterCompanyUseCase
         if (emailExists)
             result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "The Email is Already Registered!"));
 
-        var cnpjExists = await _companyReadRepository.ExistsActiveCompanyWithCNPJ(request.CNPJ, ct);
+        var cnpjExists = await _companyReadRepository.ExistsCompanyWithCNPJ(request.CNPJ, ct);
         if (cnpjExists)
             result.Errors.Add(new FluentValidation.Results.ValidationFailure(string.Empty, "Company with this CNPJ is already registered!"));
 

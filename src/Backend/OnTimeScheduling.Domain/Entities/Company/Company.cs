@@ -96,10 +96,22 @@ public class Company : BaseEntity
     public void Inactivate()
     {
         Status = RecordStatus.Inactive;
+        Touch();
     }
 
     public void Activate()
     {
         Status = RecordStatus.Active;
+        Touch();
+    }
+
+    public void Update(string socialReason, string fantasyName, string document, string phone, string email)
+    {
+        SetSocialReason(socialReason);
+        SetFantasyName(fantasyName);
+        SetDocument(document);
+        SetPhone(phone);
+        SetEmail(email);
+        Touch();
     }
 }

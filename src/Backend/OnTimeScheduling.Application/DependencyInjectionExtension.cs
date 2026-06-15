@@ -31,6 +31,12 @@ public static class DependencyInjectionExtension
         services.AddScoped<ILogoutUseCase, LogoutUseCase>();
 
         services.AddScoped<IRegisterCompanyUseCase, RegisterCompanyUseCase>();
+        services.AddScoped<IGetCompaniesUseCase, GetCompaniesUseCase>();
+        services.AddScoped<IGetCompanyByIdUseCase, GetCompanyByIdUseCase>();
+        services.AddScoped<IUpdateCompanyUseCase, UpdateCompanyUseCase>();
+        services.AddScoped<IActivateCompanyUseCase, ActivateCompanyUseCase>();
+        services.AddScoped<IInactivateCompanyUseCase, InactivateCompanyUseCase>();
+        services.AddScoped<IRegisterCompanyAdminUseCase, RegisterCompanyAdminUseCase>();
 
         services.AddScoped<IRegisterLocationUseCase, RegisterLocationUseCase>();
         services.AddScoped<IGetLocationsUseCase, GetLocationsUseCase>();
