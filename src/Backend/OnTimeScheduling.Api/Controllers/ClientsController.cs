@@ -1,8 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using OnTimeScheduling.Api.RateLimiting;
+using OnTimeScheduling.Application.UseCases.Appointments;
 using OnTimeScheduling.Application.UseCases.Clients;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses;
+using OnTimeScheduling.Communication.Responses.Appointments;
 
 namespace OnTimeScheduling.Api.Controllers;
 
@@ -47,6 +52,25 @@ public class ClientsController : OnTimeSchedulingController
         CancellationToken ct)
     {
         var response = await useCase.ExecuteAsync(id, ct);
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}/appointments")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
+    [ProducesResponseType(typeof(ResponsePagedResultJson<ResponseAppointmentSummaryJson>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [EnableRateLimiting(RateLimitingPolicyNames.ScheduleRead)]
+    public async Task<IActionResult> GetAppointments(
+        [FromServices] IGetAppointmentsUseCase useCase,
+        [FromRoute] Guid id,
+        [FromQuery] RequestGetAppointmentsJson request,
+        CancellationToken ct)
+    {
+        request.ClientId = id;
+
+        var response = await useCase.ExecuteAsync(request, ct);
         return Ok(response);
     }
 
