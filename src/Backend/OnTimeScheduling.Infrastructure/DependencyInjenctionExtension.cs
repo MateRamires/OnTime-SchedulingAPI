@@ -6,6 +6,7 @@ using OnTimeScheduling.Application.Repositories.Auth;
 using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.Reports;
 using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
@@ -71,6 +72,8 @@ public static class DependencyInjenctionExtension
         services.AddScoped<ScheduleBlockRepository>();
         services.AddScoped<IScheduleBlockReadOnlyRepository>(sp => sp.GetRequiredService<ScheduleBlockRepository>());
         services.AddScoped<IScheduleBlockWriteOnlyRepository>(sp => sp.GetRequiredService<ScheduleBlockRepository>());
+
+        services.AddScoped<IReportsReadOnlyRepository, ReportsRepository>();
 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 

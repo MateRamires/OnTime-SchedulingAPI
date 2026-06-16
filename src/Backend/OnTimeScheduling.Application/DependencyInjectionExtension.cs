@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 using OnTimeScheduling.Application.UseCases.Clients;
 using OnTimeScheduling.Application.UseCases.Companies;
 using OnTimeScheduling.Application.UseCases.Locations;
+using OnTimeScheduling.Application.UseCases.Reports;
 using OnTimeScheduling.Application.UseCases.ScheduleBlocks;
 using OnTimeScheduling.Application.UseCases.Schedules;
 using OnTimeScheduling.Application.UseCases.Services;
@@ -77,6 +78,9 @@ public static class DependencyInjectionExtension
         services.AddScoped<IUpdateAppointmentStatusUseCase, UpdateAppointmentStatusUseCase>();
         services.AddScoped<IGetDailyAgendaUseCase, GetDailyAgendaUseCase>();
         services.AddScoped<IGetMyAgendaUseCase, GetMyAgendaUseCase>();
+
+        services.AddScoped<IGetAppointmentsVolumeReportUseCase, GetAppointmentsVolumeReportUseCase>();
+        services.AddScoped<IGetProfessionalOccupancyReportUseCase, GetProfessionalOccupancyReportUseCase>();
 
         services.AddScoped<IRegisterClientUseCase, RegisterClientUseCase>();
         services.AddScoped<IGetClientsUseCase, GetClientsUseCase>();
