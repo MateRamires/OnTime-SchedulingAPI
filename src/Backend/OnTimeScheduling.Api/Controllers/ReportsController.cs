@@ -8,10 +8,7 @@ using OnTimeScheduling.Communication.Responses.Reports;
 
 namespace OnTimeScheduling.Api.Controllers;
 
-[ApiController]
-[Route("reports")]
-[Route("api/reports")]
-public class ReportsController : ControllerBase
+public class ReportsController : OnTimeSchedulingController
 {
     [HttpGet("appointments-volume")]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
