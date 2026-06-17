@@ -1,4 +1,5 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses.Appointments;
@@ -11,14 +12,26 @@ namespace OnTimeScheduling.Application.UseCases.Appointments.ReadAgenda;
 public class GetDailyAgendaUseCase : IGetDailyAgendaUseCase
 {
     private readonly IAppointmentReadOnlyRepository _repo;
-    public GetDailyAgendaUseCase(IAppointmentReadOnlyRepository repo) => _repo = repo;
+    private readonly ILocationReadOnlyRepository _locationReadRepository;
+
+    public GetDailyAgendaUseCase(
+        IAppointmentReadOnlyRepository repo,
+        ILocationReadOnlyRepository locationReadRepository)
+    {
+        _repo = repo;
+        _locationReadRepository = locationReadRepository;
+    }
 
     public async Task<ResponseAgendaJson> ExecuteAsync(RequestGetDailyAgendaJson request, CancellationToken ct = default)
     {
         ValidateRequest(request);
 
-        var startUtc = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-        var endUtc = startUtc.AddDays(1);
+        var (startUtc, endUtc) = await AgendaDateRangeResolver.ResolveUtcRangeAsync(
+            request.Date,
+            days: 1,
+            request.LocationId,
+            _locationReadRepository,
+            ct);
 
         var status = request.Status.HasValue ? (DomainAppointmentStatus?)(int)request.Status.Value : null;
         var items = await _repo.GetAgendaAsync(startUtc, endUtc, request.LocationId, request.ProfessionalId, status, ct);

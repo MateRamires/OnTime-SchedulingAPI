@@ -1,4 +1,5 @@
 ﻿using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests.Appointments;
@@ -15,11 +16,16 @@ public class GetMyAgendaUseCase : IGetMyAgendaUseCase
 {
     private readonly IAppointmentReadOnlyRepository _repo;
     private readonly ILoggedUser _loggedUser;
+    private readonly ILocationReadOnlyRepository _locationReadRepository;
 
-    public GetMyAgendaUseCase(IAppointmentReadOnlyRepository repo, ILoggedUser loggedUser)
+    public GetMyAgendaUseCase(
+        IAppointmentReadOnlyRepository repo,
+        ILoggedUser loggedUser,
+        ILocationReadOnlyRepository locationReadRepository)
     {
         _repo = repo;
         _loggedUser = loggedUser;
+        _locationReadRepository = locationReadRepository;
     }
 
     public async Task<ResponseAgendaJson> ExecuteAsync(RequestGetMyAgendaJson request, CancellationToken ct = default)
@@ -30,9 +36,15 @@ public class GetMyAgendaUseCase : IGetMyAgendaUseCase
         if (user.Role != UserRole.PROVIDER)
             throw new ErrorOnUnauthorizedException("Only providers can access my agenda.");
 
-        var startUtc = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
         var window = (DomainAgendaWindow)(int)request.Window;
-        var endUtc = window == DomainAgendaWindow.Week ? startUtc.AddDays(7) : startUtc.AddDays(1);
+        var days = window == DomainAgendaWindow.Week ? 7 : 1;
+
+        var (startUtc, endUtc) = await AgendaDateRangeResolver.ResolveUtcRangeAsync(
+            request.Date,
+            days,
+            request.LocationId,
+            _locationReadRepository,
+            ct);
 
         var status = request.Status.HasValue ? (DomainAppointmentStatus?)(int)request.Status.Value : null;
         var items = await _repo.GetAgendaAsync(startUtc, endUtc, request.LocationId, user.Id, status, ct);
