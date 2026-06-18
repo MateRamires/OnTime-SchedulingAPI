@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendCorsPolicy = "frontend";
 
 builder.Services.AddScoped<ExceptionFilter>();
 
@@ -59,6 +60,21 @@ builder.Services.AddSwaggerGen(config =>
     });
 });
 
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var signingKey = builder.Configuration.GetValue<string>("Settings:Jwt:SigningKey");
 
@@ -117,6 +133,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseRateLimiter();
