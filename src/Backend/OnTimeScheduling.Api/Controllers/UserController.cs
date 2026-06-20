@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OnTimeScheduling.Application.Security.Token;
 using OnTimeScheduling.Application.UseCases.Users.CreateUser;
 using OnTimeScheduling.Application.UseCases.Users.Management;
 using OnTimeScheduling.Communication.Requests;
@@ -96,25 +95,6 @@ public class UserController : OnTimeSchedulingController
         return NoContent();
     }
 
-
-    [HttpGet("me")]
-    [Authorize]
-    [ProducesResponseType(typeof(ResponseUserProfileJson), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public IActionResult GetMe([FromServices] ILoggedUser loggedUser)
-    {
-        var user = loggedUser.GetUser();
-
-        var response = new ResponseUserProfileJson
-        {
-            Id = user.Id,
-            Name = user.Name,
-            CompanyId = user.CompanyId,
-            Role = user.Role.ToString()
-        };
-
-        return Ok(response);
-    }
 
     [HttpPost("admin")]
     [Authorize(Roles = "SUPER_ADMIN")]

@@ -91,7 +91,7 @@ public class AppointmentsController : OnTimeSchedulingController
         return Ok(response);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -109,9 +109,11 @@ public class AppointmentsController : OnTimeSchedulingController
     }
 
 
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT,PROVIDER")] 
+    [HttpPatch("{id:guid}/cancel")]
+    [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancel(
         [FromServices] ICancelAppointmentUseCase useCase,
@@ -123,11 +125,11 @@ public class AppointmentsController : OnTimeSchedulingController
         return NoContent();
     }
 
-    [HttpPatch("{id}/provider-outcome")]
+    [HttpPatch("{id:guid}/outcome")]
     [Authorize(Roles = "COMPANY_ADMIN,ATTENDANT,PROVIDER")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateProviderOutcome(
         [FromServices] IUpdateAppointmentStatusUseCase useCase,

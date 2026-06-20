@@ -10,7 +10,7 @@ namespace OnTimeScheduling.Api.Controllers;
 
 public class AuthController : OnTimeSchedulingController
 {
-    [HttpPost]
+    [HttpPost("login")]
     [ProducesResponseType(typeof(ResponseLoginJson), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -38,6 +38,16 @@ public class AuthController : OnTimeSchedulingController
     {
         await useCase.ExecuteAsync(request, ct);
         return NoContent();
+    }
+
+    [HttpGet("me")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [ProducesResponseType(typeof(ResponseUserProfileJson), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMe([FromServices] IGetCurrentUserUseCase useCase, CancellationToken ct)
+    {
+        var response = await useCase.ExecuteAsync(ct);
+        return Ok(response);
     }
 
 }
