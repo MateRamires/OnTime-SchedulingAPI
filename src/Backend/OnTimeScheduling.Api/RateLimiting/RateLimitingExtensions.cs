@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.RateLimiting;
-using OnTimeScheduling.Communication.Responses;
-using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 
@@ -58,7 +56,6 @@ public static class RateLimitingExtensions
             options.OnRejected = async (context, cancellationToken) =>
             {
                 var httpContext = context.HttpContext;
-                var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
                 var policyName = ResolvePolicyName(httpContext);
                 var limit = ResolvePermitLimit(rateLimitingOptions, policyName);
 
@@ -75,11 +72,13 @@ public static class RateLimitingExtensions
                     httpContext.Response.Headers["RateLimit-Reset"] = retryAfterSeconds.ToString();
                 }
 
-                var response = new ResponseErrorJson(
-                    "Too many requests. Please wait before trying again.",
-                    traceId);
+                var problem = ErrorHandling.ApiProblemDetails.Create(
+                    httpContext,
+                    StatusCodes.Status429TooManyRequests,
+                    "Too Many Requests",
+                    "Please wait before trying again.");
 
-                await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+                await ErrorHandling.ApiProblemDetails.WriteAsync(httpContext, problem, cancellationToken);
             };
         });
 
