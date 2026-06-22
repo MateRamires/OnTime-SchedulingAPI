@@ -1,27 +1,44 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using OnTimeScheduling.Api.Filters;
+using OnTimeScheduling.Api.ErrorHandling;
 using OnTimeScheduling.Api.RateLimiting;
 using OnTimeScheduling.Application;
 using OnTimeScheduling.Application.Security.Password;
-using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Infrastructure;
 using OnTimeScheduling.Infrastructure.Persistence.DataAccess;
-using System;
-using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "frontend";
 
-builder.Services.AddScoped<ExceptionFilter>();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
+    });
 
-builder.Services.AddControllers(options =>
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
 {
-    options.Filters.AddService<ExceptionFilter>();
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var problem = ApiProblemDetails.CreateValidation(context.HttpContext, context.ModelState);
+        return new BadRequestObjectResult(problem)
+        {
+            ContentTypes = { "application/problem+json" }
+        };
+    };
 });
+
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -95,18 +112,27 @@ builder.Services.AddAuthentication(config =>
 
     config.Events = new JwtBearerEvents
     {
-        OnChallenge = context =>
+        OnChallenge = async context =>
         {
-            context.HandleResponse(); 
-            
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/json";
+            context.HandleResponse();
 
-            var traceId = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+            var problem = ApiProblemDetails.Create(
+                context.HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                "The access token is missing, expired, or invalid.");
 
-            var response = new ResponseErrorJson("Your session has expired or is invalid. Please login again.", traceId);
+            await ApiProblemDetails.WriteAsync(context.HttpContext, problem);
+        },
+        OnForbidden = async context =>
+        {
+            var problem = ApiProblemDetails.Create(
+                context.HttpContext,
+                StatusCodes.Status403Forbidden,
+                "Forbidden",
+                "The authenticated user does not have permission to perform this operation.");
 
-            return context.Response.WriteAsJsonAsync(response);
+            await ApiProblemDetails.WriteAsync(context.HttpContext, problem);
         }
     };
 });
@@ -124,6 +150,26 @@ var app = builder.Build();
 await MigrateDatabase(app);
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var httpContext = statusCodeContext.HttpContext;
+    var (title, detail) = httpContext.Response.StatusCode switch
+    {
+        StatusCodes.Status404NotFound => ("Not Found", "The requested endpoint was not found."),
+        StatusCodes.Status405MethodNotAllowed => ("Method Not Allowed", "The HTTP method is not supported by this endpoint."),
+        _ => (ReasonPhrases.GetReasonPhrase(httpContext.Response.StatusCode), "The request could not be completed.")
+    };
+
+    var problem = ApiProblemDetails.Create(
+        httpContext,
+        httpContext.Response.StatusCode,
+        title,
+        detail);
+
+    await ApiProblemDetails.WriteAsync(httpContext, problem);
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
