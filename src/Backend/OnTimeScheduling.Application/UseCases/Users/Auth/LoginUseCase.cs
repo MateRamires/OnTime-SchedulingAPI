@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Password;
 using OnTimeScheduling.Application.Security.Token;
+using OnTimeScheduling.Application.UseCases.Users.Auth.Mapper;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Enums;
@@ -85,9 +86,9 @@ public class LoginUseCase : ILoginUseCase
 
         return new ResponseLoginJson
         {
-            Name = user.Name,
             AccessToken = accessToken,
-            RefreshToken = refreshToken
+            RefreshToken = refreshToken,
+            User = UserProfileResponseMapper.Map(user)
         };
     }
 }

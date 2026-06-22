@@ -3,6 +3,7 @@ using OnTimeScheduling.Application.Repositories.Companies;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Token;
+using OnTimeScheduling.Application.UseCases.Users.Auth.Mapper;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Domain.Enums;
@@ -65,7 +66,12 @@ public class RefreshTokenUseCase : IRefreshTokenUseCase
         await _refreshTokenRepository.AddAsync(newRefresh, ct);
         await _unitOfWork.Commit(ct);
 
-        return new ResponseLoginJson { Name = user.Name, AccessToken = _accessTokenGenerator.Generate(user), RefreshToken = newRefreshPlain };
+        return new ResponseLoginJson
+        {
+            AccessToken = _accessTokenGenerator.Generate(user),
+            RefreshToken = newRefreshPlain,
+            User = UserProfileResponseMapper.Map(user)
+        };
     }
 
     private async Task RevokeInvalidRefreshToken(Domain.Entities.Auth.RefreshToken stored, CancellationToken ct)

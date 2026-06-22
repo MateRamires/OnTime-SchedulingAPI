@@ -13,8 +13,8 @@ public class UserResponseMapper
             CompanyId = user.CompanyId,
             Name = user.Name,
             Email = user.Email,
-            Role = user.Role.ToString(),
-            Status = user.Status.ToString(),
+            Role = (Communication.Enums.UserRole)(int)user.Role,
+            Status = (Communication.Enums.RecordStatus)(int)user.Status,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
