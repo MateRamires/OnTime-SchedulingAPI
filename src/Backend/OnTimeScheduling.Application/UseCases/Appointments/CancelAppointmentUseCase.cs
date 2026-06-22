@@ -30,11 +30,11 @@ public class CancelAppointmentUseCase : ICancelAppointmentUseCase
     {
         var loggedUser = _loggedUser.GetUser();
 
+        if (loggedUser.Role is not UserRole.COMPANY_ADMIN and not UserRole.ATTENDANT)
+            throw new ErrorOnUnauthorizedException("Only company administrators and attendants can cancel appointments.");
+
         var appointment = await _appointmentReadRepository.GetAppointmentByIdAsync(appointmentId, ct)
             ?? throw new NotFoundException("Appointment not found.");
-
-        if (loggedUser.Role == UserRole.PROVIDER && appointment.ProfessionalId != loggedUser.Id)
-            throw new ErrorOnUnauthorizedException("Providers can only cancel their own appointments.");
 
         appointment.Cancel();
 
