@@ -41,10 +41,10 @@ public class UpdateAppointmentStatusUseCase : IUpdateAppointmentStatusUseCase
 
         switch (request.Status)
         {
-            case AppointmentOutcomeStatus.COMPLETED:
+            case AppointmentOutcomeStatus.Completed:
                 appointment.MarkAsCompleted();
                 break;
-            case AppointmentOutcomeStatus.NO_SHOW:
+            case AppointmentOutcomeStatus.NoShow:
                 appointment.MarkAsNoShow();
                 break;
             default:

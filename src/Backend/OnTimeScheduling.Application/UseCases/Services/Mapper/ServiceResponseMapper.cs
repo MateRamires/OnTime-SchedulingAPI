@@ -12,7 +12,7 @@ public class ServiceResponseMapper
         Description = service.Description,
         Price = service.Price,
         DurationInMinutes = service.DurationInMinutes,
-        Status = service.Status.ToString(),
+        Status = (Communication.Enums.RecordStatus)(int)service.Status,
         CreatedAt = service.CreatedAt,
         UpdatedAt = service.UpdatedAt
     };

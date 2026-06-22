@@ -13,7 +13,7 @@ public class CompanyResponseMapper
         CNPJ = company.Document,
         Phone = company.Phone,
         CompanyEmail = company.Email,
-        Status = company.Status.ToString(),
+        Status = (Communication.Enums.RecordStatus)(int)company.Status,
         CreatedAt = company.CreatedAt,
         UpdatedAt = company.UpdatedAt
     };

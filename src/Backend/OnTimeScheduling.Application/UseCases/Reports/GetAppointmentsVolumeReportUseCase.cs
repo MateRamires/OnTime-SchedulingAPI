@@ -131,9 +131,9 @@ public class GetAppointmentsVolumeReportUseCase : IGetAppointmentsVolumeReportUs
 
         return groupBy switch
         {
-            ReportPeriodGrouping.DAY => DateTime.SpecifyKind(date, DateTimeKind.Utc),
-            ReportPeriodGrouping.WEEK => DateTime.SpecifyKind(date.AddDays(-GetDaysSinceMonday(date.DayOfWeek)), DateTimeKind.Utc),
-            ReportPeriodGrouping.MONTH => new DateTime(value.Year, value.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            ReportPeriodGrouping.Day => DateTime.SpecifyKind(date, DateTimeKind.Utc),
+            ReportPeriodGrouping.Week => DateTime.SpecifyKind(date.AddDays(-GetDaysSinceMonday(date.DayOfWeek)), DateTimeKind.Utc),
+            ReportPeriodGrouping.Month => new DateTime(value.Year, value.Month, 1, 0, 0, 0, DateTimeKind.Utc),
             _ => throw new ErrorOnValidationException(["GroupBy is invalid."])
         };
     }
@@ -142,9 +142,9 @@ public class GetAppointmentsVolumeReportUseCase : IGetAppointmentsVolumeReportUs
     {
         return groupBy switch
         {
-            ReportPeriodGrouping.DAY => periodStart.AddDays(1),
-            ReportPeriodGrouping.WEEK => periodStart.AddDays(7),
-            ReportPeriodGrouping.MONTH => periodStart.AddMonths(1),
+            ReportPeriodGrouping.Day => periodStart.AddDays(1),
+            ReportPeriodGrouping.Week => periodStart.AddDays(7),
+            ReportPeriodGrouping.Month => periodStart.AddMonths(1),
             _ => throw new ErrorOnValidationException(["GroupBy is invalid."])
         };
     }

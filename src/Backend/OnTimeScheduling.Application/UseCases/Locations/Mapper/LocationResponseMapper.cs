@@ -13,7 +13,7 @@ public class LocationResponseMapper
             Name = location.Name,
             Address = location.Address,
             TimeZoneId = location.TimeZoneId,
-            Status = location.Status.ToString(),
+            Status = (Communication.Enums.RecordStatus)(int)location.Status,
             CreatedAt = location.CreatedAt,
             UpdatedAt = location.UpdatedAt
         };
