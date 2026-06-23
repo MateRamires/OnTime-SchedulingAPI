@@ -18,23 +18,29 @@ public class LoggedUser : ILoggedUser
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        if (httpContext == null || !httpContext.User.Identity.IsAuthenticated) 
+        if (httpContext?.User.Identity?.IsAuthenticated != true)
+            throw new InvalidLoginException("The authenticated session is invalid.");
+
+        var userIdClaim = httpContext.User.FindFirstValue(ClaimTypes.Sid);
+        var userName = httpContext.User.FindFirstValue(ClaimTypes.Name);
+        var userRoleClaim = httpContext.User.FindFirstValue(ClaimTypes.Role);
+        var companyIdClaim = httpContext.User.FindFirstValue("CompanyId");
+
+        if (!Guid.TryParse(userIdClaim, out var userId) ||
+            string.IsNullOrWhiteSpace(userName) ||
+            !Enum.TryParse<UserRole>(userRoleClaim, ignoreCase: true, out var userRole))
         {
-            throw new ErrorOnUnauthorizedException("User not authenticated");
+            throw new InvalidLoginException("The authenticated session is invalid.");
         }
 
-        var claims = httpContext.User.Claims;
+        Guid? companyId = null;
+        if (!string.IsNullOrWhiteSpace(companyIdClaim))
+        {
+            if (!Guid.TryParse(companyIdClaim, out var parsedCompanyId))
+                throw new InvalidLoginException("The authenticated session is invalid.");
 
-        var userIdClaim = claims.First(c => c.Type == ClaimTypes.Sid).Value;
-        var userId = Guid.Parse(userIdClaim);
-
-        var userName = claims.First(c => c.Type == ClaimTypes.Name).Value;
-
-        var userRoleClaim = claims.First(c => c.Type == ClaimTypes.Role).Value;
-        var userRole = Enum.Parse<UserRole>(userRoleClaim);
-
-        var companyIdClaim = claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value;
-        Guid? companyId = companyIdClaim != null ? Guid.Parse(companyIdClaim) : null;
+            companyId = parsedCompanyId;
+        }
 
         return new LoggedUserInfo
         {

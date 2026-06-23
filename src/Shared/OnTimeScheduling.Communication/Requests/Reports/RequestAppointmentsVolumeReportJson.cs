@@ -10,5 +10,5 @@ public class RequestAppointmentsVolumeReportJson
     public Guid? ProfessionalId { get; set; }
     public Guid? ServiceId { get; set; }
     public List<AppointmentStatus>? Status { get; set; }
-    public ReportPeriodGrouping GroupBy { get; set; } = ReportPeriodGrouping.DAY;
+    public ReportPeriodGrouping GroupBy { get; set; } = ReportPeriodGrouping.Day;
 }

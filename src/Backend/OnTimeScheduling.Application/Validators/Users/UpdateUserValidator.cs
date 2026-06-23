@@ -19,7 +19,7 @@ public class UpdateUserValidator : AbstractValidator<RequestUpdateUserJson>
             .MaximumLength(200).WithMessage("The Email must have less than 200 characters");
 
         RuleFor(user => user.Role)
-            .Must(role => role is CommunicationUserRole.COMPANY_ADMIN or CommunicationUserRole.ATTENDANT or CommunicationUserRole.PROVIDER)
+            .Must(role => role is CommunicationUserRole.CompanyAdmin or CommunicationUserRole.Attendant or CommunicationUserRole.Provider)
             .WithMessage("Only CompanyAdmin, Attendant or Provider roles are allowed for company users.");
     }
 

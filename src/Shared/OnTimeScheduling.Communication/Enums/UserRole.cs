@@ -2,8 +2,8 @@
 
 public enum UserRole
 {
-    SUPER_ADMIN = 1,
-    COMPANY_ADMIN = 2,
-    ATTENDANT = 3,
-    PROVIDER = 4,
+    SuperAdmin = 1,
+    CompanyAdmin = 2,
+    Attendant = 3,
+    Provider = 4,
 }

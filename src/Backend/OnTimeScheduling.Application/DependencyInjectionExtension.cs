@@ -30,6 +30,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<ILoginUseCase, LoginUseCase>();
         services.AddScoped<IRefreshTokenUseCase, RefreshTokenUseCase>();
         services.AddScoped<ILogoutUseCase, LogoutUseCase>();
+        services.AddScoped<IGetCurrentUserUseCase, GetCurrentUserUseCase>();
 
         services.AddScoped<IRegisterCompanyUseCase, RegisterCompanyUseCase>();
         services.AddScoped<IGetCompaniesUseCase, GetCompaniesUseCase>();

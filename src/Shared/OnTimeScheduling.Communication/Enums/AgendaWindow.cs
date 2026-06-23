@@ -2,6 +2,6 @@
 
 public enum AgendaWindow
 {
-    DAY = 1,
-    WEEK = 2
+    Day = 1,
+    Week = 2
 }

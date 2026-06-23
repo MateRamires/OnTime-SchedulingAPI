@@ -2,6 +2,6 @@
 
 public enum AppointmentOutcomeStatus
 {
-    COMPLETED = 1,
-    NO_SHOW = 2
+    Completed = 1,
+    NoShow = 2
 }
