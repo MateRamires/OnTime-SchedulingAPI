@@ -18,6 +18,7 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly ITenantProvider _tenantProvider;
+    private readonly FutureAppointmentScheduleGuard _futureAppointmentScheduleGuard;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateScheduleUseCase(
@@ -26,6 +27,7 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadOnlyRepository,
         ITenantProvider tenantProvider,
+        FutureAppointmentScheduleGuard futureAppointmentScheduleGuard,
         IUnitOfWork unitOfWork)
     {
         _readRepository = readRepository;
@@ -33,6 +35,7 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
         _userRepository = userRepository;
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _tenantProvider = tenantProvider;
+        _futureAppointmentScheduleGuard = futureAppointmentScheduleGuard;
         _unitOfWork = unitOfWork;
     }
 
@@ -42,6 +45,8 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
             ?? throw new NotFoundException("Professional schedule not found.");
 
         await Validate(request, id, ct);
+
+        await _futureAppointmentScheduleGuard.EnsureCanUpdateAsync(schedule, request, ct);
 
         schedule.Update(
             request.UserId,

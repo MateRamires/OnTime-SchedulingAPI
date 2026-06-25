@@ -8,15 +8,18 @@ public class DeleteScheduleUseCase : IDeleteScheduleUseCase
 {
     private readonly IProfessionalScheduleReadOnlyRepository _readRepository;
     private readonly IProfessionalScheduleWriteOnlyRepository _writeRepository;
+    private readonly FutureAppointmentScheduleGuard _futureAppointmentScheduleGuard;
     private readonly IUnitOfWork _unitOfWork;
 
     public DeleteScheduleUseCase(
         IProfessionalScheduleReadOnlyRepository readRepository,
         IProfessionalScheduleWriteOnlyRepository writeRepository,
+        FutureAppointmentScheduleGuard futureAppointmentScheduleGuard,
         IUnitOfWork unitOfWork)
     {
         _readRepository = readRepository;
         _writeRepository = writeRepository;
+        _futureAppointmentScheduleGuard = futureAppointmentScheduleGuard;
         _unitOfWork = unitOfWork;
     }
 
@@ -24,6 +27,8 @@ public class DeleteScheduleUseCase : IDeleteScheduleUseCase
     {
         var schedule = await _readRepository.GetByIdAsync(id, ct)
             ?? throw new NotFoundException("Professional schedule not found.");
+
+        await _futureAppointmentScheduleGuard.EnsureCanDeleteAsync(schedule, ct);
 
         _writeRepository.Delete(schedule);
         await _unitOfWork.Commit(ct);

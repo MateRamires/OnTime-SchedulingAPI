@@ -63,6 +63,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IGetProfessionalScheduleByIdUseCase, GetProfessionalScheduleByIdUseCase>();
         services.AddScoped<IUpdateScheduleUseCase, UpdateScheduleUseCase>();
         services.AddScoped<IDeleteScheduleUseCase, DeleteScheduleUseCase>();
+        services.AddScoped<FutureAppointmentScheduleGuard>();
 
         services.AddScoped<IRegisterScheduleBlockUseCase, RegisterScheduleBlockUseCase>();
         services.AddScoped<IGetScheduleBlocksUseCase, GetScheduleBlocksUseCase>();
@@ -87,6 +88,8 @@ public static class DependencyInjectionExtension
         services.AddScoped<IGetClientsUseCase, GetClientsUseCase>();
         services.AddScoped<IGetClientByIdUseCase, GetClientByIdUseCase>();
         services.AddScoped<IUpdateClientUseCase, UpdateClientUseCase>();
+        services.AddScoped<IActivateClientUseCase, ActivateClientUseCase>();
+        services.AddScoped<IInactivateClientUseCase, InactivateClientUseCase>();
         services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();
     }
 }
