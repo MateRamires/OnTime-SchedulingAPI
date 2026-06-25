@@ -58,6 +58,16 @@ public class LocationRepository : ILocationWriteOnlyRepository, ILocationReadOnl
             .Select(l => l.TimeZoneId)
             .FirstOrDefaultAsync(ct);
     }
+
+    public async Task<string?> GetLocationTimeZoneIdById(Guid locationId, CancellationToken ct = default)
+    {
+        return await _dbContext.Locations
+            .AsNoTracking()
+            .Where(l => l.Id == locationId)
+            .Select(l => l.TimeZoneId)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public Task<Location?> GetByIdAsync(Guid locationId, CancellationToken ct = default)
     {
         return _dbContext.Locations

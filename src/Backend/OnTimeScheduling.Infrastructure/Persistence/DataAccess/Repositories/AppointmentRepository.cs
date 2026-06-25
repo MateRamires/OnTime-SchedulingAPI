@@ -99,7 +99,53 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
         return await query.AnyAsync(ct);
     }
 
+    public async Task<bool> HasFutureScheduledAppointmentsAsync(
+        Guid? professionalId = null,
+        Guid? locationId = null,
+        Guid? serviceId = null,
+        Guid? clientId = null,
+        CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
 
+        var query = _dbContext.Appointments
+            .AsNoTracking()
+            .Where(a =>
+                a.Status == AppointmentStatus.Scheduled &&
+                a.EndTime > nowUtc);
+
+        if (professionalId.HasValue)
+            query = query.Where(a => a.ProfessionalId == professionalId.Value);
+
+        if (locationId.HasValue)
+            query = query.Where(a => a.LocationId == locationId.Value);
+
+        if (serviceId.HasValue)
+            query = query.Where(a => a.ServiceId == serviceId.Value);
+
+        if (clientId.HasValue)
+            query = query.Where(a => a.ClientId == clientId.Value);
+
+        return await query.AnyAsync(ct);
+    }
+
+    public async Task<List<Appointment>> GetFutureScheduledAppointmentsForProfessionalLocationAsync(
+        Guid professionalId,
+        Guid locationId,
+        CancellationToken ct = default)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        return await _dbContext.Appointments
+            .AsNoTracking()
+            .Where(a =>
+                a.ProfessionalId == professionalId &&
+                a.LocationId == locationId &&
+                a.Status == AppointmentStatus.Scheduled &&
+                a.EndTime > nowUtc)
+            .OrderBy(a => a.StartTime)
+            .ToListAsync(ct);
+    }
 
     public async Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default)
     {
@@ -234,6 +280,4 @@ public class AppointmentRepository : IAppointmentWriteOnlyRepository, IAppointme
                 UpdatedAtUtc = x.a.UpdatedAt
             });
     }
-
-
 }

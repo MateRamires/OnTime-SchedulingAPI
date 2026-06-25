@@ -10,6 +10,7 @@ public interface ILocationReadOnlyRepository
     Task<bool> ExistsLocationWithNameExceptId(string name, Guid locationId, Guid companyId, CancellationToken ct = default);
     Task<bool> ExistsActiveLocationById(Guid locationId, CancellationToken ct = default);
     Task<string?> GetActiveLocationTimeZoneIdById(Guid locationId, CancellationToken ct = default);
+    Task<string?> GetLocationTimeZoneIdById(Guid locationId, CancellationToken ct = default);
     Task<Location?> GetByIdAsync(Guid locationId, CancellationToken ct = default);
     Task<(List<Location> Items, int TotalItems)> GetAllAsync(int skip, int take, RecordStatus? status = null, string? searchTerm = null, CancellationToken ct = default);
 }

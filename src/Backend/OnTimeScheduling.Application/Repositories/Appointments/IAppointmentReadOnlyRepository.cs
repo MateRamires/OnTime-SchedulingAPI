@@ -31,6 +31,18 @@ public interface IAppointmentReadOnlyRepository
         DateTime endTimeUtc,
         CancellationToken ct = default);
 
+    Task<bool> HasFutureScheduledAppointmentsAsync(
+        Guid? professionalId = null,
+        Guid? locationId = null,
+        Guid? serviceId = null,
+        Guid? clientId = null,
+        CancellationToken ct = default);
+
+    Task<List<Appointment>> GetFutureScheduledAppointmentsForProfessionalLocationAsync(
+        Guid professionalId,
+        Guid locationId,
+        CancellationToken ct = default);
+
     Task<Appointment?> GetAppointmentByIdAsync(Guid id, CancellationToken ct = default);
 
     Task<List<AppointmentAgendaItem>> GetAgendaAsync(
