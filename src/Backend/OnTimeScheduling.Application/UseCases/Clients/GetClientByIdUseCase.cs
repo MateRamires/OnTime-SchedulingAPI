@@ -1,6 +1,7 @@
-﻿using OnTimeScheduling.Application.Repositories.Clients;
+using OnTimeScheduling.Application.Repositories.Clients;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Exceptions.ExceptionBase;
+using CommunicationRecordStatus = OnTimeScheduling.Communication.Enums.RecordStatus;
 
 namespace OnTimeScheduling.Application.UseCases.Clients;
 
@@ -23,8 +24,10 @@ public class GetClientByIdUseCase : IGetClientByIdUseCase
             Id = client.Id,
             Name = client.Name,
             Phone = client.Phone,
-            Email = client.Email
+            Email = client.Email,
+            Status = (CommunicationRecordStatus)(int)client.Status,
+            CreatedAt = client.CreatedAt,
+            UpdatedAt = client.UpdatedAt
         };
     }
-
 }

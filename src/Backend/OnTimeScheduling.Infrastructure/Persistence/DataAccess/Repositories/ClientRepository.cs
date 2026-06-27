@@ -41,16 +41,38 @@ public class ClientRepository : IClientWriteOnlyRepository, IClientReadOnlyRepos
     public Task<Client?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return _dbContext.Clients
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id && c.Status == RecordStatus.Active, ct);
-
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
     }
 
-    public async Task<(List<Client> Items, int TotalItems)> GetAllActiveAsync(int skip, int take, CancellationToken ct = default)
+    public Task<Client?> GetActiveByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return _dbContext.Clients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id && c.Status == RecordStatus.Active, ct);
+    }
+
+    public async Task<(List<Client> Items, int TotalItems)> GetAllAsync(
+        int skip,
+        int take,
+        RecordStatus? status = null,
+        string? searchTerm = null,
+        CancellationToken ct = default)
     {
         var query = _dbContext.Clients
             .AsNoTracking()
-            .Where(c => c.Status == RecordStatus.Active);
+            .AsQueryable();
+
+        if (status.HasValue)
+            query = query.Where(c => c.Status == status.Value);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearchTerm = searchTerm.Trim().ToLower();
+            query = query.Where(c =>
+                c.Name.ToLower().Contains(normalizedSearchTerm) ||
+                c.Phone.ToLower().Contains(normalizedSearchTerm) ||
+                (c.Email != null && c.Email.ToLower().Contains(normalizedSearchTerm)));
+        }
 
         var totalItems = await query.CountAsync(ct);
 

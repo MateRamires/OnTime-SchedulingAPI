@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using OnTimeScheduling.Api.RateLimiting;
@@ -8,6 +8,7 @@ using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Communication.Requests.Appointments;
 using OnTimeScheduling.Communication.Responses;
 using OnTimeScheduling.Communication.Responses.Appointments;
+using OnTimeScheduling.Domain.Enums;
 
 namespace OnTimeScheduling.Api.Controllers;
 
@@ -35,9 +36,11 @@ public class ClientsController : OnTimeSchedulingController
     public async Task<IActionResult> GetAll(
         [FromServices] IGetClientsUseCase useCase,
         [FromQuery] RequestPaginationQuery pagination,
+        [FromQuery] RecordStatus? status,
+        [FromQuery] string? searchTerm,
         CancellationToken ct)
     {
-        var response = await useCase.ExecuteAsync(pagination, ct);
+        var response = await useCase.ExecuteAsync(pagination, status, searchTerm, ct);
         return Ok(response);
     }
 
@@ -90,9 +93,39 @@ public class ClientsController : OnTimeSchedulingController
         return NoContent();
     }
 
+    [HttpPatch("{id:guid}/activate")]
+    [Authorize(Roles = "COMPANY_ADMIN")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Activate(
+        [FromServices] IActivateClientUseCase useCase,
+        [FromRoute] Guid id,
+        CancellationToken ct)
+    {
+        await useCase.ExecuteAsync(id, ct);
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/inactivate")]
+    [Authorize(Roles = "COMPANY_ADMIN")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Inactivate(
+        [FromServices] IInactivateClientUseCase useCase,
+        [FromRoute] Guid id,
+        CancellationToken ct)
+    {
+        await useCase.ExecuteAsync(id, ct);
+        return NoContent();
+    }
+
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "COMPANY_ADMIN")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(
@@ -103,5 +136,4 @@ public class ClientsController : OnTimeSchedulingController
         await useCase.ExecuteAsync(id, ct);
         return NoContent();
     }
-
 }

@@ -35,6 +35,12 @@ public class Client : TenantEntity
         Touch();
     }
 
+    public void Activate()
+    {
+        Status = RecordStatus.Active;
+        Touch();
+    }
+
     private void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
