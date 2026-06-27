@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Application.Repositories.Services;
+using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Validators.Services;
 using OnTimeScheduling.Communication.Requests;
@@ -10,12 +11,18 @@ public class UpdateServiceUseCase : IUpdateServiceUseCase
 {
     private readonly IServiceReadOnlyRepository _serviceReadOnlyRepository;
     private readonly IServiceWriteOnlyRepository _serviceWriteOnlyRepository;
+    private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateServiceUseCase(IServiceReadOnlyRepository serviceReadOnlyRepository, IServiceWriteOnlyRepository serviceWriteOnlyRepository, IUnitOfWork unitOfWork)
+    public UpdateServiceUseCase(
+        IServiceReadOnlyRepository serviceReadOnlyRepository,
+        IServiceWriteOnlyRepository serviceWriteOnlyRepository,
+        IAppointmentReadOnlyRepository appointmentReadRepository,
+        IUnitOfWork unitOfWork)
     {
         _serviceReadOnlyRepository = serviceReadOnlyRepository;
         _serviceWriteOnlyRepository = serviceWriteOnlyRepository;
+        _appointmentReadRepository = appointmentReadRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -28,6 +35,15 @@ public class UpdateServiceUseCase : IUpdateServiceUseCase
 
         var service = await _serviceReadOnlyRepository.GetByIdAsync(serviceId, ct)
             ?? throw new NotFoundException("Service not found.");
+
+        if (service.DurationInMinutes != request.DurationInMinutes)
+        {
+            var hasFutureAppointments = await _appointmentReadRepository
+                .HasFutureScheduledAppointmentsAsync(serviceId: serviceId, ct: ct);
+
+            if (hasFutureAppointments)
+                throw new ConflictException("Cannot change the duration of a service with future scheduled appointments. Cancel or reschedule those appointments first.");
+        }
 
         service.Update(request.Name, request.Description, request.Price, request.DurationInMinutes);
 
@@ -47,5 +63,4 @@ public class UpdateServiceUseCase : IUpdateServiceUseCase
         if (!result.IsValid)
             throw new ErrorOnValidationException(result.Errors.Select(error => error.ErrorMessage).ToList());
     }
-
 }

@@ -1,4 +1,5 @@
-﻿using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Security.Token;
@@ -13,17 +14,20 @@ namespace OnTimeScheduling.Application.UseCases.Users.Management;
 public class UpdateUserUseCase : IUpdateUserUseCase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly ILoggedUser _loggedUser;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateUserUseCase(
         IUserRepository userRepository,
+        IAppointmentReadOnlyRepository appointmentReadRepository,
         ITenantProvider tenantProvider,
         ILoggedUser loggedUser,
         IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
+        _appointmentReadRepository = appointmentReadRepository;
         _tenantProvider = tenantProvider;
         _loggedUser = loggedUser;
         _unitOfWork = unitOfWork;
@@ -42,7 +46,18 @@ public class UpdateUserUseCase : IUpdateUserUseCase
         var user = await _userRepository.GetByIdAndCompanyIncludingInactive(userId, companyId, ct)
             ?? throw new NotFoundException("User not found.");
 
-        user.UpdateInternalProfile(request.Name, request.Email, (DomainUserRole)(int)request.Role);
+        var newRole = (DomainUserRole)(int)request.Role;
+
+        if (user.Role == DomainUserRole.PROVIDER && newRole != DomainUserRole.PROVIDER)
+        {
+            var hasFutureAppointments = await _appointmentReadRepository
+                .HasFutureScheduledAppointmentsAsync(professionalId: userId, ct: ct);
+
+            if (hasFutureAppointments)
+                throw new ConflictException("Cannot change the role of a provider with future scheduled appointments. Cancel or reschedule those appointments first.");
+        }
+
+        user.UpdateInternalProfile(request.Name, request.Email, newRole);
 
         _userRepository.Update(user);
         await _unitOfWork.Commit(ct);
@@ -67,5 +82,4 @@ public class UpdateUserUseCase : IUpdateUserUseCase
         if (!result.IsValid)
             throw new ErrorOnValidationException(result.Errors.Select(error => error.ErrorMessage).ToList());
     }
-
 }

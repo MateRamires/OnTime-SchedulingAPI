@@ -1,8 +1,10 @@
-﻿using OnTimeScheduling.Application.Repositories.Locations;
+using OnTimeScheduling.Application.Repositories.Appointments;
+using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Locations;
 using OnTimeScheduling.Communication.Requests;
+using OnTimeScheduling.Domain.Entities.Locations;
 using OnTimeScheduling.Domain.Extensions;
 using OnTimeScheduling.Exceptions.ExceptionBase;
 
@@ -12,17 +14,20 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
 {
     private readonly ILocationReadOnlyRepository _locationReadRepository;
     private readonly ILocationWriteOnlyRepository _locationWriteRepository;
+    private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateLocationUseCase(
         ILocationReadOnlyRepository locationReadRepository,
         ILocationWriteOnlyRepository locationWriteRepository,
+        IAppointmentReadOnlyRepository appointmentReadRepository,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
         _locationReadRepository = locationReadRepository;
         _locationWriteRepository = locationWriteRepository;
+        _appointmentReadRepository = appointmentReadRepository;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -37,6 +42,19 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
 
         var location = await _locationReadRepository.GetByIdAsync(locationId, ct)
             ?? throw new NotFoundException("Location not found.");
+
+        var newTimeZoneId = string.IsNullOrWhiteSpace(request.TimeZoneId)
+            ? Location.DefaultTimeZoneId
+            : request.TimeZoneId.Trim();
+
+        if (!string.Equals(location.TimeZoneId, newTimeZoneId, StringComparison.Ordinal))
+        {
+            var hasFutureAppointments = await _appointmentReadRepository
+                .HasFutureScheduledAppointmentsAsync(locationId: locationId, ct: ct);
+
+            if (hasFutureAppointments)
+                throw new ConflictException("Cannot change the timezone of a location with future scheduled appointments. Cancel or reschedule those appointments first.");
+        }
 
         location.Update(request.Name, request.Address, request.TimeZoneId);
 
@@ -84,5 +102,4 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
             result.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(timeZoneId), "The provided timezone is invalid."));
         }
     }
-
 }

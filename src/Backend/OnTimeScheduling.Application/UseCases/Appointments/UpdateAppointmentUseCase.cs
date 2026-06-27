@@ -112,7 +112,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
 
         if (_tenantProvider.CompanyId.HasValue)
         {
-            var client = await _clientReadRepository.GetByIdAsync(request.ClientId, ct);
+            var client = await _clientReadRepository.GetActiveByIdAsync(request.ClientId, ct);
             if (client is null)
                 errors.Add("Client not found in this tenant.");
 
