@@ -122,18 +122,4 @@ public class ClientsController : OnTimeSchedulingController
         return NoContent();
     }
 
-    [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "COMPANY_ADMIN")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Delete(
-        [FromServices] IDeleteClientUseCase useCase,
-        [FromRoute] Guid id,
-        CancellationToken ct)
-    {
-        await useCase.ExecuteAsync(id, ct);
-        return NoContent();
-    }
 }

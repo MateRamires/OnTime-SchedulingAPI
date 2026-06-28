@@ -90,6 +90,5 @@ public static class DependencyInjectionExtension
         services.AddScoped<IUpdateClientUseCase, UpdateClientUseCase>();
         services.AddScoped<IActivateClientUseCase, ActivateClientUseCase>();
         services.AddScoped<IInactivateClientUseCase, InactivateClientUseCase>();
-        services.AddScoped<IDeleteClientUseCase, DeleteClientUseCase>();
     }
 }
