@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Npgsql;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Domain.Entities.DefaultEntity;
+using OnTimeScheduling.Exceptions.ExceptionBase;
 
 namespace OnTimeScheduling.Infrastructure.Persistence.DataAccess;
 
@@ -14,7 +16,7 @@ public class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
     }
 
-    public Task<int> Commit(CancellationToken ct = default)
+    public async Task<int> Commit(CancellationToken ct = default)
     {
         foreach (var entry in _dbContext.ChangeTracker.Entries<BaseEntity>())
         {
@@ -22,6 +24,22 @@ public class UnitOfWork : IUnitOfWork
                 entry.Entity.Touch();
         }
 
-        return _dbContext.SaveChangesAsync(ct);
+        try
+        {
+            return await _dbContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsAppointmentOverlapConstraintViolation(ex))
+        {
+            throw new ConflictException("The selected time slot is no longer available due to an overlapping appointment.");
+        }
+    }
+
+    private static bool IsAppointmentOverlapConstraintViolation(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.ExclusionViolation,
+            ConstraintName: "ex_appointments_no_professional_overlap"
+        };
     }
 }
