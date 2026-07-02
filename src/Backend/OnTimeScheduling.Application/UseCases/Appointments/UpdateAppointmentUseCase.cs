@@ -7,6 +7,7 @@ using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Appointments;
 using OnTimeScheduling.Communication.Requests;
@@ -26,6 +27,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly IProfessionalScheduleReadOnlyRepository _scheduleReadRepository;
     private readonly IScheduleBlockReadOnlyRepository _scheduleBlockReadRepository;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -39,6 +41,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         ILocationReadOnlyRepository locationReadOnlyRepository,
         IProfessionalScheduleReadOnlyRepository scheduleReadRepository,
         IScheduleBlockReadOnlyRepository scheduleBlockReadRepository,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -51,6 +54,7 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _scheduleReadRepository = scheduleReadRepository;
         _scheduleBlockReadRepository = scheduleBlockReadRepository;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -59,31 +63,43 @@ public class UpdateAppointmentUseCase : IUpdateAppointmentUseCase
     {
         ValidateBasicFields(request);
 
-        var appointment = await _appointmentReadRepository.GetAppointmentByIdAsync(appointmentId, ct)
-            ?? throw new NotFoundException("Appointment not found.");
+        await _agendaConcurrencyGuard.ExecuteAsync(
+            [
+                AgendaConcurrencyLockKey.ForAppointment(appointmentId),
+                AgendaConcurrencyLockKey.ForProfessional(request.ProfessionalId),
+                AgendaConcurrencyLockKey.ForLocation(request.LocationId),
+                AgendaConcurrencyLockKey.ForService(request.ServiceId),
+                AgendaConcurrencyLockKey.ForClient(request.ClientId)
+            ],
+            async lockedCt =>
+            {
+                var appointment = await _appointmentReadRepository.GetAppointmentByIdAsync(appointmentId, lockedCt)
+                    ?? throw new NotFoundException("Appointment not found.");
 
-        if (appointment.Status != AppointmentStatus.Scheduled)
-            throw new ErrorOnValidationException(["Only scheduled appointments can be edited."]);
+                if (appointment.Status != AppointmentStatus.Scheduled)
+                    throw new ErrorOnValidationException(["Only scheduled appointments can be edited."]);
 
-        var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, ct);
-        if (service is null || service.Status != RecordStatus.Active)
-            throw new NotFoundException("Service not found.");
+                var service = await _serviceReadRepository.GetByIdAsync(request.ServiceId, lockedCt);
+                if (service is null || service.Status != RecordStatus.Active)
+                    throw new NotFoundException("Service not found.");
 
-        var startTimeUtc = request.StartTime;
-        var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
+                var startTimeUtc = request.StartTime;
+                var endTimeUtc = startTimeUtc.AddMinutes(service.DurationInMinutes);
 
-        await ValidateBusinessRulesAsync(appointmentId, request, startTimeUtc, endTimeUtc, ct);
+                await ValidateBusinessRulesAsync(appointmentId, request, startTimeUtc, endTimeUtc, lockedCt);
 
-        appointment.Reschedule(
-            request.ClientId,
-            request.ProfessionalId,
-            request.ServiceId,
-            request.LocationId,
-            startTimeUtc,
-            endTimeUtc);
+                appointment.Reschedule(
+                    request.ClientId,
+                    request.ProfessionalId,
+                    request.ServiceId,
+                    request.LocationId,
+                    startTimeUtc,
+                    endTimeUtc);
 
-        _appointmentWriteRepository.Update(appointment);
-        await _unitOfWork.Commit(ct);
+                _appointmentWriteRepository.Update(appointment);
+                await _unitOfWork.Commit(lockedCt);
+            },
+            ct);
     }
 
     private void ValidateBasicFields(RequestUpdateAppointmentJson request)
