@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.ScheduleBlocks;
 using OnTimeScheduling.Communication.Requests;
@@ -19,6 +20,7 @@ public class UpdateScheduleBlockUseCase : IUpdateScheduleBlockUseCase
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadRepository;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -28,6 +30,7 @@ public class UpdateScheduleBlockUseCase : IUpdateScheduleBlockUseCase
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadRepository,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -36,6 +39,7 @@ public class UpdateScheduleBlockUseCase : IUpdateScheduleBlockUseCase
         _appointmentReadRepository = appointmentReadRepository;
         _userRepository = userRepository;
         _locationReadRepository = locationReadRepository;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -44,20 +48,39 @@ public class UpdateScheduleBlockUseCase : IUpdateScheduleBlockUseCase
     {
         request.Reason = request.Reason?.Trim();
 
-        var block = await _readRepository.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException("Schedule block not found.");
+        await _agendaConcurrencyGuard.ExecuteAsync(
+            CreateLockKeys(request.ProfessionalId, request.LocationId),
+            async lockedCt =>
+            {
+                var block = await _readRepository.GetByIdAsync(id, lockedCt)
+                    ?? throw new NotFoundException("Schedule block not found.");
 
-        await ValidateAsync(request, ct);
+                await ValidateAsync(request, lockedCt);
 
-        block.Update(
-            request.ProfessionalId,
-            request.LocationId,
-            request.StartTime,
-            request.EndTime,
-            request.Reason);
+                block.Update(
+                    request.ProfessionalId,
+                    request.LocationId,
+                    request.StartTime,
+                    request.EndTime,
+                    request.Reason);
 
-        _writeRepository.Update(block);
-        await _unitOfWork.Commit(ct);
+                _writeRepository.Update(block);
+                await _unitOfWork.Commit(lockedCt);
+            },
+            ct);
+    }
+
+    private static List<AgendaConcurrencyLockKey> CreateLockKeys(Guid? professionalId, Guid? locationId)
+    {
+        var lockKeys = new List<AgendaConcurrencyLockKey>();
+
+        if (professionalId.HasValue)
+            lockKeys.Add(AgendaConcurrencyLockKey.ForProfessional(professionalId.Value));
+
+        if (locationId.HasValue)
+            lockKeys.Add(AgendaConcurrencyLockKey.ForLocation(locationId.Value));
+
+        return lockKeys;
     }
 
     private async Task ValidateAsync(RequestUpdateScheduleBlockJson request, CancellationToken ct)

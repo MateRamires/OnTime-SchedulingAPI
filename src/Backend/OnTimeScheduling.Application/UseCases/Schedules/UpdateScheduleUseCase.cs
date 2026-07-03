@@ -3,6 +3,7 @@ using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.Schedules;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Schedules;
 using OnTimeScheduling.Communication.Requests;
@@ -19,6 +20,7 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
     private readonly ILocationReadOnlyRepository _locationReadOnlyRepository;
     private readonly ITenantProvider _tenantProvider;
     private readonly FutureAppointmentScheduleGuard _futureAppointmentScheduleGuard;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateScheduleUseCase(
@@ -28,6 +30,7 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
         ILocationReadOnlyRepository locationReadOnlyRepository,
         ITenantProvider tenantProvider,
         FutureAppointmentScheduleGuard futureAppointmentScheduleGuard,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         IUnitOfWork unitOfWork)
     {
         _readRepository = readRepository;
@@ -36,27 +39,55 @@ public class UpdateScheduleUseCase : IUpdateScheduleUseCase
         _locationReadOnlyRepository = locationReadOnlyRepository;
         _tenantProvider = tenantProvider;
         _futureAppointmentScheduleGuard = futureAppointmentScheduleGuard;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _unitOfWork = unitOfWork;
     }
 
     public async Task ExecuteAsync(Guid id, RequestUpdateScheduleJson request, CancellationToken ct = default)
     {
-        var schedule = await _readRepository.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException("Professional schedule not found.");
+        await _agendaConcurrencyGuard.ExecuteAsync(
+            [AgendaConcurrencyLockKey.ForProfessionalSchedule(id)],
+            async lockedCt =>
+            {
+                var schedule = await _readRepository.GetByIdAsync(id, lockedCt)
+                    ?? throw new NotFoundException("Professional schedule not found.");
 
-        await Validate(request, id, ct);
+                await _agendaConcurrencyGuard.ExecuteAsync(
+                    CreateLockKeys(schedule.UserId, schedule.LocationId, request.UserId, request.LocationId),
+                    async scheduleLockedCt =>
+                    {
+                        await Validate(request, id, scheduleLockedCt);
 
-        await _futureAppointmentScheduleGuard.EnsureCanUpdateAsync(schedule, request, ct);
+                        await _futureAppointmentScheduleGuard.EnsureCanUpdateAsync(schedule, request, scheduleLockedCt);
 
-        schedule.Update(
-            request.UserId,
-            request.LocationId,
-            request.DayOfWeek,
-            request.StartTime,
-            request.EndTime);
+                        schedule.Update(
+                            request.UserId,
+                            request.LocationId,
+                            request.DayOfWeek,
+                            request.StartTime,
+                            request.EndTime);
 
-        _writeRepository.Update(schedule);
-        await _unitOfWork.Commit(ct);
+                        _writeRepository.Update(schedule);
+                        await _unitOfWork.Commit(scheduleLockedCt);
+                    },
+                    lockedCt);
+            },
+            ct);
+    }
+
+    private static List<AgendaConcurrencyLockKey> CreateLockKeys(
+        Guid currentProfessionalId,
+        Guid currentLocationId,
+        Guid requestedProfessionalId,
+        Guid requestedLocationId)
+    {
+        return
+        [
+            AgendaConcurrencyLockKey.ForProfessional(currentProfessionalId),
+            AgendaConcurrencyLockKey.ForLocation(currentLocationId),
+            AgendaConcurrencyLockKey.ForProfessional(requestedProfessionalId),
+            AgendaConcurrencyLockKey.ForLocation(requestedLocationId)
+        ];
     }
 
     private async Task Validate(RequestUpdateScheduleJson request, Guid scheduleId, CancellationToken ct)

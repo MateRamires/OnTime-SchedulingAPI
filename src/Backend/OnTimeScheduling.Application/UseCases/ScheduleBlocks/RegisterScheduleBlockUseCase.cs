@@ -4,6 +4,7 @@ using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.ScheduleBlocks;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
 using OnTimeScheduling.Application.Repositories.Users;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.ScheduleBlocks;
 using OnTimeScheduling.Communication.Requests;
@@ -20,6 +21,7 @@ public class RegisterScheduleBlockUseCase : IRegisterScheduleBlockUseCase
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILocationReadOnlyRepository _locationReadRepository;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -28,6 +30,7 @@ public class RegisterScheduleBlockUseCase : IRegisterScheduleBlockUseCase
         IAppointmentReadOnlyRepository appointmentReadRepository,
         IUserRepository userRepository,
         ILocationReadOnlyRepository locationReadRepository,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
@@ -35,6 +38,7 @@ public class RegisterScheduleBlockUseCase : IRegisterScheduleBlockUseCase
         _appointmentReadRepository = appointmentReadRepository;
         _userRepository = userRepository;
         _locationReadRepository = locationReadRepository;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -43,19 +47,38 @@ public class RegisterScheduleBlockUseCase : IRegisterScheduleBlockUseCase
     {
         request.Reason = request.Reason?.Trim();
 
-        await ValidateAsync(request, ct);
+        return await _agendaConcurrencyGuard.ExecuteAsync(
+            CreateLockKeys(request.ProfessionalId, request.LocationId),
+            async lockedCt =>
+            {
+                await ValidateAsync(request, lockedCt);
 
-        var block = new ScheduleBlock(
-            request.ProfessionalId,
-            request.LocationId,
-            request.StartTime,
-            request.EndTime,
-            request.Reason);
+                var block = new ScheduleBlock(
+                    request.ProfessionalId,
+                    request.LocationId,
+                    request.StartTime,
+                    request.EndTime,
+                    request.Reason);
 
-        await _writeRepository.AddAsync(block, ct);
-        await _unitOfWork.Commit(ct);
+                await _writeRepository.AddAsync(block, lockedCt);
+                await _unitOfWork.Commit(lockedCt);
 
-        return new ResponseRegisterScheduleBlockJson { Id = block.Id };
+                return new ResponseRegisterScheduleBlockJson { Id = block.Id };
+            },
+            ct);
+    }
+
+    private static List<AgendaConcurrencyLockKey> CreateLockKeys(Guid? professionalId, Guid? locationId)
+    {
+        var lockKeys = new List<AgendaConcurrencyLockKey>();
+
+        if (professionalId.HasValue)
+            lockKeys.Add(AgendaConcurrencyLockKey.ForProfessional(professionalId.Value));
+
+        if (locationId.HasValue)
+            lockKeys.Add(AgendaConcurrencyLockKey.ForLocation(locationId.Value));
+
+        return lockKeys;
     }
 
     private async Task ValidateAsync(RequestRegisterScheduleBlockJson request, CancellationToken ct)
