@@ -1,6 +1,7 @@
 using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Locations;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Security.Tenant;
 using OnTimeScheduling.Application.Validators.Locations;
 using OnTimeScheduling.Communication.Requests;
@@ -15,6 +16,7 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
     private readonly ILocationReadOnlyRepository _locationReadRepository;
     private readonly ILocationWriteOnlyRepository _locationWriteRepository;
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly ITenantProvider _tenantProvider;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -22,12 +24,14 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
         ILocationReadOnlyRepository locationReadRepository,
         ILocationWriteOnlyRepository locationWriteRepository,
         IAppointmentReadOnlyRepository appointmentReadRepository,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         ITenantProvider tenantProvider,
         IUnitOfWork unitOfWork)
     {
         _locationReadRepository = locationReadRepository;
         _locationWriteRepository = locationWriteRepository;
         _appointmentReadRepository = appointmentReadRepository;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _tenantProvider = tenantProvider;
         _unitOfWork = unitOfWork;
     }
@@ -38,28 +42,34 @@ public class UpdateLocationUseCase : IUpdateLocationUseCase
         request.Address = request.Address?.Trim() ?? string.Empty;
         request.TimeZoneId = string.IsNullOrWhiteSpace(request.TimeZoneId) ? null : request.TimeZoneId.Trim();
 
-        await Validate(locationId, request, ct);
+        await _agendaConcurrencyGuard.ExecuteAsync(
+            [AgendaConcurrencyLockKey.ForLocation(locationId)],
+            async lockedCt =>
+            {
+                await Validate(locationId, request, lockedCt);
 
-        var location = await _locationReadRepository.GetByIdAsync(locationId, ct)
-            ?? throw new NotFoundException("Location not found.");
+                var location = await _locationReadRepository.GetByIdAsync(locationId, lockedCt)
+                    ?? throw new NotFoundException("Location not found.");
 
-        var newTimeZoneId = string.IsNullOrWhiteSpace(request.TimeZoneId)
-            ? Location.DefaultTimeZoneId
-            : request.TimeZoneId.Trim();
+                var newTimeZoneId = string.IsNullOrWhiteSpace(request.TimeZoneId)
+                    ? Location.DefaultTimeZoneId
+                    : request.TimeZoneId.Trim();
 
-        if (!string.Equals(location.TimeZoneId, newTimeZoneId, StringComparison.Ordinal))
-        {
-            var hasFutureAppointments = await _appointmentReadRepository
-                .HasFutureScheduledAppointmentsAsync(locationId: locationId, ct: ct);
+                if (!string.Equals(location.TimeZoneId, newTimeZoneId, StringComparison.Ordinal))
+                {
+                    var hasFutureAppointments = await _appointmentReadRepository
+                        .HasFutureScheduledAppointmentsAsync(locationId: locationId, ct: lockedCt);
 
-            if (hasFutureAppointments)
-                throw new ConflictException("Cannot change the timezone of a location with future scheduled appointments. Cancel or reschedule those appointments first.");
-        }
+                    if (hasFutureAppointments)
+                        throw new ConflictException("Cannot change the timezone of a location with future scheduled appointments. Cancel or reschedule those appointments first.");
+                }
 
-        location.Update(request.Name, request.Address, request.TimeZoneId);
+                location.Update(request.Name, request.Address, request.TimeZoneId);
 
-        _locationWriteRepository.Update(location);
-        await _unitOfWork.Commit(ct);
+                _locationWriteRepository.Update(location);
+                await _unitOfWork.Commit(lockedCt);
+            },
+            ct);
     }
 
     private async Task Validate(Guid locationId, RequestUpdateLocationJson request, CancellationToken ct)

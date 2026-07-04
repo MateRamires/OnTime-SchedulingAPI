@@ -1,6 +1,7 @@
 using OnTimeScheduling.Application.Repositories.Appointments;
 using OnTimeScheduling.Application.Repositories.Services;
 using OnTimeScheduling.Application.Repositories.UnitOfWork;
+using OnTimeScheduling.Application.Security.Concurrency;
 using OnTimeScheduling.Application.Validators.Services;
 using OnTimeScheduling.Communication.Requests;
 using OnTimeScheduling.Exceptions.ExceptionBase;
@@ -12,17 +13,20 @@ public class UpdateServiceUseCase : IUpdateServiceUseCase
     private readonly IServiceReadOnlyRepository _serviceReadOnlyRepository;
     private readonly IServiceWriteOnlyRepository _serviceWriteOnlyRepository;
     private readonly IAppointmentReadOnlyRepository _appointmentReadRepository;
+    private readonly IAgendaConcurrencyGuard _agendaConcurrencyGuard;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateServiceUseCase(
         IServiceReadOnlyRepository serviceReadOnlyRepository,
         IServiceWriteOnlyRepository serviceWriteOnlyRepository,
         IAppointmentReadOnlyRepository appointmentReadRepository,
+        IAgendaConcurrencyGuard agendaConcurrencyGuard,
         IUnitOfWork unitOfWork)
     {
         _serviceReadOnlyRepository = serviceReadOnlyRepository;
         _serviceWriteOnlyRepository = serviceWriteOnlyRepository;
         _appointmentReadRepository = appointmentReadRepository;
+        _agendaConcurrencyGuard = agendaConcurrencyGuard;
         _unitOfWork = unitOfWork;
     }
 
@@ -31,24 +35,30 @@ public class UpdateServiceUseCase : IUpdateServiceUseCase
         request.Name = request.Name?.Trim() ?? string.Empty;
         request.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
 
-        await Validate(serviceId, request, ct);
+        await _agendaConcurrencyGuard.ExecuteAsync(
+            [AgendaConcurrencyLockKey.ForService(serviceId)],
+            async lockedCt =>
+            {
+                await Validate(serviceId, request, lockedCt);
 
-        var service = await _serviceReadOnlyRepository.GetByIdAsync(serviceId, ct)
-            ?? throw new NotFoundException("Service not found.");
+                var service = await _serviceReadOnlyRepository.GetByIdAsync(serviceId, lockedCt)
+                    ?? throw new NotFoundException("Service not found.");
 
-        if (service.DurationInMinutes != request.DurationInMinutes)
-        {
-            var hasFutureAppointments = await _appointmentReadRepository
-                .HasFutureScheduledAppointmentsAsync(serviceId: serviceId, ct: ct);
+                if (service.DurationInMinutes != request.DurationInMinutes)
+                {
+                    var hasFutureAppointments = await _appointmentReadRepository
+                        .HasFutureScheduledAppointmentsAsync(serviceId: serviceId, ct: lockedCt);
 
-            if (hasFutureAppointments)
-                throw new ConflictException("Cannot change the duration of a service with future scheduled appointments. Cancel or reschedule those appointments first.");
-        }
+                    if (hasFutureAppointments)
+                        throw new ConflictException("Cannot change the duration of a service with future scheduled appointments. Cancel or reschedule those appointments first.");
+                }
 
-        service.Update(request.Name, request.Description, request.Price, request.DurationInMinutes);
+                service.Update(request.Name, request.Description, request.Price, request.DurationInMinutes);
 
-        _serviceWriteOnlyRepository.Update(service);
-        await _unitOfWork.Commit(ct);
+                _serviceWriteOnlyRepository.Update(service);
+                await _unitOfWork.Commit(lockedCt);
+            },
+            ct);
     }
 
     private async Task Validate(Guid serviceId, RequestUpdateServiceJson request, CancellationToken ct)
